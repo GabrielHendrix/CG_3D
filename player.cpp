@@ -1,6 +1,193 @@
 #include "player.h"
 #include <math.h>
+#include <GL/gl.h>
+#include <GL/glut.h>
+#include <string>
+#include <vector>
+#include <iostream>
 #include <stdio.h>
+#include <string.h>
+#include "imageloader.h"
+
+//Aponta para uma das Player de movimento e coloca na primeira frame
+void Player::drawInit(int movID){
+    currentMovID = movID;
+    currentFrame = 0;
+}
+
+//Desenha a proxima frame do movimento atual e retorna se ja chegou no final
+bool Player::drawNext(){
+    this->draw(this->currentMovID, this->currentFrame);
+    this->currentFrame++;
+    
+    return (this->currentFrame >= this->vecMeshes[this->currentMovID].size());
+}
+
+
+//Carrega as Player de um movimento do caminho path e assumindo qtd arquivos
+int Player::loadMeshAnim(string path, int qtd){
+    vector<mesh> vec;
+    mesh m;
+    this->vecMeshes.push_back(vec);
+    int movID = this->vecMeshes.size()-1;
+    char str[7];
+    size_t index = path.find("#");
+    for(int i = 1; i<=qtd; i++){
+        snprintf (str, 7, "%06d", i);
+        path.replace(index, 6, str);
+        std::cout << path << std::endl; 
+        this->vecMeshes[movID].push_back(m);
+        this->vecMeshes[movID][this->vecMeshes[movID].size()-1].loadMesh(path);
+    }
+    return movID;
+}
+
+//Desenha uma mesh com a respectiva textura
+void Player::draw(int movID, int frameId){
+    glPushMatrix();
+    glTranslatef(0, gY, gZ);
+    GLfloat m[4][4] = { 3,0,0,0,
+                        0,3,0,0,
+                        0,0,3,0,
+                        1,1,1,1};
+
+    // glMultMatrixf(&m[0][0]);
+    glScalef(3, 3, 3);
+    glRotatef(90, 0, 1, 0);
+    glRotatef(direction, 0, 1, 0);
+    if (this->texID != -1){
+        glEnable(GL_TEXTURE_2D);
+        glBindTexture (GL_TEXTURE_2D, this->texID);
+    }
+    this->vecMeshes[movID][frameId].draw();
+    if (this->texID != -1){
+        glDisable(GL_TEXTURE_2D);
+    }
+    glPopMatrix();
+}
+
+//Le a textura
+bool Player::loadTexture(string path){
+    FILE* file= fopen(path.data(), "r");
+    
+    Image* image = loadBMP(path.c_str());
+    this->texWidth = image->width;
+    this->texHeight = image->height;
+
+    glGenTextures( 1, &(this->texID) );
+    glBindTexture( GL_TEXTURE_2D, this->texID );
+    glTexEnvf( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE,GL_MODULATE );
+//    glTexEnvf( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE,GL_REPLACE );
+    glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,GL_LINEAR );
+    glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER,GL_LINEAR );
+    glTexImage2D(GL_TEXTURE_2D,                //Always GL_TEXTURE_2D
+                             0,                            //0 for now
+                             GL_RGB,                       //Format OpenGL uses for image
+                             this->texWidth, this->texHeight,  //Width and height
+                             0,                            //The border of the image
+                             GL_RGB, //GL_RGB, because pixels are stored in RGB format
+                             GL_UNSIGNED_BYTE, //GL_UNSIGNED_BYTE, because pixels are stored
+                                               //as unsigned numbers
+                             image->pixels);               //The actual pixel data
+    delete image;
+}
+
+//função para carregar o OBJ
+bool mesh::loadMesh(string path){
+    vector<int> vertIndex, uvIndex, normIndex;//indexadores para vertices, mapeamento de textura e normais
+    vertsPos.clear();
+    vertsNorm.clear();
+    vertsTex.clear();
+    vertsS.clear();
+    int i =0;
+    FILE* file= fopen(path.data(), "r");
+    if(file== NULL){
+        cout<< "falha ao carregar o arquivo"<< endl;
+        return false;
+    }
+    else{ 
+        while(1){
+            char lineHeader[128];
+            int res= fscanf(file, "%s", lineHeader);
+            if(res==EOF){
+                    break;
+            }
+            if(strcmp(lineHeader, "v") == 0){
+                pos vert;
+                fscanf(file, "%f %f %f\n", &vert.x, &vert.y, &vert.z);
+                vertsPos.push_back(vert);
+            }
+            else if(strcmp(lineHeader,"vt")==0){
+                tex vert;
+                fscanf(file, "%f %f\n", &vert.u, &vert.v);
+                vertsTex.push_back(vert);
+            }
+            else if(strcmp(lineHeader, "vn")==0){
+                norm vert;
+                fscanf(file, "%f %f %f\n", &vert.x, &vert.y, &vert.z);
+                vertsNorm.push_back(vert);
+            }
+            else if(strcmp(lineHeader, "f")==0){
+                string v1, v2, v3;
+                unsigned int vertInd[3], uvInd[3], normInd[3];
+                int matches = fscanf(file, "%d/%d/%d %d/%d/%d %d/%d/%d\n", &vertInd[0], &uvInd[0], &normInd[0], &vertInd[1], &uvInd[1], &normInd[1], &vertInd[2], &uvInd[2], &normInd[2]);
+                if(matches !=9){
+                        printf("QUantidade de valores lidos diferente doesperado. Falha ao ler uma linha de face");
+                        return false;			
+                }
+                //Cria uma lista com os índices na ordem apropriada para o desenho das faces
+                //Esta é a lista de índices de vértices
+                vertIndex.push_back(vertInd[0]);
+                vertIndex.push_back(vertInd[1]);
+                vertIndex.push_back(vertInd[2]);
+                //Esta é a lista de índices de mapeamento de textura
+                uvIndex.push_back(uvInd[0]);
+                uvIndex.push_back(uvInd[1]);
+                uvIndex.push_back(uvInd[2]);
+                // Esta é a lista de índices de normais
+                normIndex.push_back(normInd[0]);
+                normIndex.push_back(normInd[1]);
+                normIndex.push_back(normInd[2]);
+            }
+        }
+        for(unsigned int i=0; i<vertIndex.size(); i++){
+            verticeStrip vert;
+            vert.vPos.x = vertsPos[vertIndex[i]-1].x;
+            vert.vPos.y = vertsPos[vertIndex[i]-1].y;
+            vert.vPos.z = vertsPos[vertIndex[i]-1].z;
+            vert.vTex.u = vertsTex[uvIndex[i]-1].u;
+            vert.vTex.v = vertsTex[uvIndex[i]-1].v;
+            vert.vNorm.x = vertsNorm[normIndex[i]-1].x;
+            vert.vNorm.y = vertsNorm[normIndex[i]-1].y;
+            vert.vNorm.z = vertsNorm[normIndex[i]-1].z;
+            vertsS.push_back(vert);
+        }
+    }
+    return true;
+}
+
+//desenha a malha
+void mesh::draw(){
+    int cont=0;
+    GLfloat materialEmission[] = { 0.10, 0.10, 0.10, 1};
+    GLfloat materialColorA[] = { 0.1, 0.1, 0.1, 0.1};
+    GLfloat materialColorD[] = { .90, .90, .90, 1};
+    glColor3f(1,1,1);
+
+    glMaterialfv(GL_FRONT, GL_EMISSION, materialEmission);
+    glMaterialfv(GL_FRONT, GL_AMBIENT, materialColorA);
+    glMaterialfv(GL_FRONT, GL_DIFFUSE, materialColorD);
+
+    for(unsigned int i=0; i<vertsS.size(); i=i+3){
+        glBegin(GL_TRIANGLE_STRIP);
+            for(int j=i; j<i+3; j++){
+                glTexCoord2f (vertsS[j].vTex.u, vertsS[j].vTex.v);
+                glNormal3f(vertsS[j].vNorm.x,vertsS[j].vNorm.y,vertsS[j].vNorm.z);
+                glVertex3f(vertsS[j].vPos.x,vertsS[j].vPos.y,vertsS[j].vPos.z);
+            }
+        glEnd();
+    }
+}
 
 void normalizePlayer(float a[3])
 {
@@ -20,7 +207,7 @@ void Player::DrawRect(GLint height, GLint width, GLfloat R, GLfloat G, GLfloat B
 	/* Define cor dos vértices com os valores R, G e B variando de 0.0 a 1.0 */
 	glColor3f (R, G, B);
 	/* Desenhar um polígono branco (retângulo) */
-    GLint lenght = 2;
+    GLint length = 2;
     GLfloat materialEmission[] = { 0.00, 0.00, 0.00, 1.0};
             GLfloat materialColor[] = { 1.0, 0.0, 1.0, 1.0};
             GLfloat mat_specular[] = { 1.0, 0.0, 1.0, 1.0};
@@ -34,113 +221,113 @@ void Player::DrawRect(GLint height, GLint width, GLfloat R, GLfloat G, GLfloat B
         glMaterialfv(GL_FRONT, GL_SPECULAR, mat_specular);
         glMaterialfv(GL_FRONT, GL_SHININESS, mat_shininess);
         
-        // down face
+        // // down face
+        // a[0] = -width/2;
+        // a[1] = 0;
+        // a[2] = length;
+
+        // b[0] = width/2;
+        // b[1] = 0;
+        // b[2] = 0.0;
+
+        // crossPlayer(a,b,norm);
+        // normalizePlayer(norm);
+        // glNormal3f(norm[0], norm[1], norm[2]);
+        // glVertex3f (gX, -gY-height, 0.0);  // Lado Esquerdo Baixo 
+        // glVertex3f (gX+width, -gY-height, 0.0); // Lado Direito Baixo
+        // glVertex3f (gX+width, -gY-height, -length); // Lado Direito Cima
+        // glVertex3f (gX, -gY-height, -length);  // Lado Esquerdo Cima
+
+        // glVertex3f (-width/2, 0, 0.0);  // Lado Esquerdo Baixo 
+        // glVertex3f (width/2, 0, 0.0); // Lado Direito Baixo        
+        // glVertex3f (-width/2, 0, -length);  // Lado Esquerdo Cima
+        // glVertex3f (width/2, 0, -length); // Lado Direito Cima
+        //right face
         a[0] = -width/2;
-        a[1] = 0;
-        a[2] = lenght;
-
-        b[0] = width/2;
-        b[1] = 0;
-        b[2] = 0.0;
-
-        crossPlayer(a,b,norm);
-        normalizePlayer(norm);
-        glNormal3f(norm[0], norm[1], norm[2]);
-        glVertex3f (gX, -gY-height, 0.0);  // Lado Esquerdo Baixo 
-        glVertex3f (gX+width, -gY-height, 0.0); // Lado Direito Baixo
-        glVertex3f (gX+width, -gY-height, -lenght); // Lado Direito Cima
-        glVertex3f (gX, -gY-height, -lenght);  // Lado Esquerdo Cima
-
-        glVertex3f (-width/2, 0, 0.0);  // Lado Esquerdo Baixo 
-        glVertex3f (width/2, 0, 0.0); // Lado Direito Baixo        
-        glVertex3f (-width/2, 0, -lenght);  // Lado Esquerdo Cima
-        glVertex3f (width/2, 0, -lenght); // Lado Direito Cima
-        //left face
-        a[0] = -width/2;
-        a[1] = 0;
-        a[2] = -lenght;
+        a[1] = height;
+        a[2] = -length;
 
         b[0] = -width/2;
-        b[1] = height;
-        b[2] = 0.0;
+        b[1] = 0;
+        b[2] = 0;
 
         crossPlayer(a,b,norm);
         normalizePlayer(norm);
         glNormal3f(norm[0], norm[1], norm[2]);
         glVertex3f (-width/2, 0, 0.0);  // Lado Esquerdo Cima
-        glVertex3f (-width/2, 0, -lenght); // Lado Direito Cima
-        glVertex3f (-width/2, height, -lenght); // Lado Direito Baixo
+        glVertex3f (-width/2, 0, -length); // Lado Direito Cima
+        glVertex3f (-width/2, height, -length); // Lado Direito Baixo
         glVertex3f (-width/2, height, 0.0);  // Lado Esquerdo Baixo
         
-        //right face
+        //left face
         a[0] = width/2;
-        a[1] = height;
-        a[2] = 0.0;
+        a[1] = 0;
+        a[2] = 0;
 
         b[0] = width/2;
-        b[1] = 0;
-        b[2] = -lenght;
+        b[1] = height;
+        b[2] = -length;
 
         crossPlayer(a,b,norm);
         normalizePlayer(norm);
         glNormal3f(norm[0], norm[1], norm[2]);
 
         glVertex3f (width/2, 0, 0.0);  // Lado Esquerdo Cima
-        glVertex3f (width/2, 0, -lenght); // Lado Direito Cima
-        glVertex3f (width/2, height, -lenght); // Lado Direito Baixo
+        glVertex3f (width/2, 0, -length); // Lado Direito Cima
+        glVertex3f (width/2, height, -length); // Lado Direito Baixo
         glVertex3f (width/2, height, 0.0);  // Lado Esquerdo Baixo
         
-        // front face
-        a[0] = width/2;
-        a[1] = height;
-        a[2] = -lenght;
-
-        b[0] = -width/2;
-        b[1] = 0;
-        b[2] = -lenght;
-
-        crossPlayer(a,b,norm);
-        normalizePlayer(norm);
-        glNormal3f(norm[0], norm[1], norm[2]);
-        glVertex3f (-width/2, 0, -lenght);  // Lado Esquerdo Cima
-        glVertex3f (width/2, 0, -lenght); // Lado Direito Cima
-        glVertex3f (width/2, height, -lenght); // Lado Direito Baixo
-        glVertex3f (-width/2, height, -lenght);  // Lado Esquerdo Baixo 
-
-
-        // up face
-        a[0] = -width/2;
-        a[1] = height;
-        a[2] = -lenght;
-
-        b[0] = width/2;
-        b[1] = height;
-        b[2] = 0;
-
-        crossPlayer(a,b,norm);
-        normalizePlayer(norm);
-        glNormal3f(norm[0], norm[1], norm[2]);
-        glVertex3f (width/2, height, 0.0); // Lado Direito Baixo        
-        glVertex3f (-width/2, height, 0.0);  // Lado Esquerdo Baixo
-        glVertex3f (-width/2, height, -lenght);  // Lado Esquerdo Cima
-        glVertex3f (width/2, height, -lenght); // Lado Direito Cima
-         
         // back face
         a[0] = -width/2;
         a[1] = height;
-        a[2] = 0.0;
+        a[2] = -length;
 
-        b[0] = gX+width;
+        b[0] = width/2;
         b[1] = 0;
-        b[2] = 0.0;
+        b[2] = -length;
 
         crossPlayer(a,b,norm);
         normalizePlayer(norm);
         glNormal3f(norm[0], norm[1], norm[2]);
-        glVertex3f (-width/2, 0, 0.0);  // Lado Esquerdo Cima
-		glVertex3f (width/2, 0, 0.0); // Lado Direito Cima
-		glVertex3f (width/2, height, 0.0); // Lado Direito Baixo
-		glVertex3f (-width/2, height, 0.0);  // Lado Esquerdo Baixo
+        glVertex3f (-width/2, 0, -length);  // Lado Esquerdo Cima
+        glVertex3f (width/2, 0, -length); // Lado Direito Cima
+        glVertex3f (width/2, height, -length); // Lado Direito Baixo
+        glVertex3f (-width/2, height, -length);  // Lado Esquerdo Baixo 
+
+
+    //     // up face
+    //     a[0] = -width/2;
+    //     a[1] = height;
+    //     a[2] = -length;
+
+    //     b[0] = width/2;
+    //     b[1] = height;
+    //     b[2] = 0;
+
+    //     crossPlayer(a,b,norm);
+    //     normalizePlayer(norm);
+    //     glNormal3f(norm[0], norm[1], norm[2]);
+    //     glVertex3f (width/2, height, 0.0); // Lado Direito Baixo        
+    //     glVertex3f (-width/2, height, 0.0);  // Lado Esquerdo Baixo
+    //     glVertex3f (-width/2, height, -length);  // Lado Esquerdo Cima
+    //     glVertex3f (width/2, height, -length); // Lado Direito Cima
+         
+    //     // front face
+    //     a[0] = -width/2;
+    //     a[1] = 0;
+    //     a[2] = 0.0;
+
+    //     b[0] =width/2;
+    //     b[1] = height;
+    //     b[2] = 0.0;
+
+    //     crossPlayer(a,b,norm);
+    //     normalizePlayer(norm);
+    //     glNormal3f(norm[0], norm[1], norm[2]);
+    //     glVertex3f (-width/2, 0, 0.0);  // Lado Esquerdo Cima
+	// 	glVertex3f (width/2, 0, 0.0); // Lado Direito Cima
+	// 	glVertex3f (width/2, height, 0.0); // Lado Direito Baixo
+	// 	glVertex3f (-width/2, height, 0.0);  // Lado Esquerdo Baixo
     glEnd();
 }
 
@@ -210,9 +397,9 @@ void Player::DrawBody(GLfloat x, GLfloat y, GLfloat thetaWheel, GLfloat theta0, 
     {
         glPushMatrix();
         if (direction == 0)
-            glTranslatef(0,y,-7);
+            glTranslatef(0,y,0);
         else
-            glTranslatef(0,y,-9);
+            glTranslatef(0,y,0);
         glRotatef(direction,0,1,0);
         if(aiming)
         {
@@ -243,9 +430,9 @@ void Player::DrawBody(GLfloat x, GLfloat y, GLfloat thetaWheel, GLfloat theta0, 
         glPushMatrix();
 
         if (direction == 0)
-            glTranslatef(0,y,-7);
+            glTranslatef(0,y,0);
         else
-            glTranslatef(0,y,-9);
+            glTranslatef(0,y,0);
         glRotatef(direction,0,1,0);
         if(aiming)
         {
@@ -297,7 +484,7 @@ void Player::DrawBody(GLfloat x, GLfloat y, GLfloat thetaWheel, GLfloat theta0, 
 
 bool Player::GravityEffect(GLfloat dx, GLdouble deltaTime)
 {
-    if(ground < gY-legHeight)
+    if(ground < gY)
     {
         gY -= percentual*deltaTime;
         if(!colliderState)
@@ -331,56 +518,72 @@ void Player::Jump(GLfloat dx, GLfloat dy, GLdouble deltaTime)
     gThetaJump01 = 0;
     gThetaJump11 = 0;
 }
-
-void Player::MoveInX(GLfloat dx, GLdouble deltaTime)
+void Player::Rotate(GLfloat angle, GLdouble deltaTime)
 {
+    direction += angle*deltaTime/15;
+}
+
+GLfloat degreeToRad(int degree)
+{
+	return (degree * M_PI)/180;
+}
+
+void Player::Move(GLfloat delta, GLdouble deltaTime)
+{
+    GLfloat dx, dz;
+
+    dx = cos(degreeToRad(direction)) * delta;
+    dz = sin(degreeToRad(direction)) * delta;
+
     gX += dx*percentual*deltaTime/15;
-    if(dx > 0)
-    {
-        direction = 0;
-        hDirection = 1;
-    }
-    if(dx < 0)
-    {
-        direction = 180;
-        hDirection = -1;    
-    }
-    if(ground < gY-legHeight)
+    gZ -= dz*percentual*deltaTime/15;
+
+    // if(dx > 0)
+    // {
+    //     direction = 0;
+    //     hDirection = 1;
+    // }
+    // if(dx < 0)
+    // {
+    //     direction = 180;
+    //     hDirection = -1;    
+    // }
+    if(ground < gY)
         gY = gY;
     else
-        gY = ground - (cos((abs(gTheta0)*M_PI)/180) * legHeight ); // * deltaTime/15;
-    gTheta0 += inc0 * abs(dx) ;
-    gTheta1 += inc1 * abs(dx);
-    gTheta01 += inc01 * abs(dx);
-    gTheta11 += inc11 * abs(dx);
-    if(gTheta01 == -45 || gTheta01 == 0)
-        inc01 *= -1;
-    if(gTheta11 == -45 || gTheta11 == 0)
-        inc11 *= -1;
-    if(gTheta1 == 225 || gTheta1 == 135)
-        inc1 *= -1;
-    if(gTheta0 == -225 || gTheta0 == -135)
-        inc0 *= -1;
-    if(gTheta1 == 225) 
-    {
-        inc11 = 0;
-        gTheta11 = 0;
-    }
-    if(gTheta1 == 135)
-    {
-        inc11 = -1; 
-        gTheta11 = 0;
-    }
-    if(gTheta0 == -225) 
-    {
-        inc01 = -1;
-        gTheta01 = 0;
-    }
-    if(gTheta0 == -135)
-    {
-        inc01 = 0; 
-        gTheta01 = 0;
-    }
+        gY = ground; // * deltaTime/15;
+    // gTheta0 += inc0 * abs(dx) ;
+    // gTheta1 += inc1 * abs(dx);
+    // gTheta01 += inc01 * abs(dx);
+    // gTheta11 += inc11 * abs(dx);
+    // if(gTheta01 == -45 || gTheta01 == 0)dddd
+    //     inc01 *= -1;
+    // if(gTheta11 == -45 || gTheta11 == 0)
+    //     inc11 *= -1;
+    // if(gTheta1 == 225 || gTheta1 == 135)
+    //     inc1 *= -1;
+    // if(gTheta0 == -225 || gTheta0 == -135)
+    //     inc0 *= -1;
+    // if(gTheta1 == 225) 
+    // {
+    //     inc11 = 0;
+    //     gTheta11 = 0;
+    // }
+    // if(gTheta1 == 135)
+    // {
+    //     inc11 = -1; 
+    //     gTheta11 = 0;
+    // }
+    // if(gTheta0 == -225) 
+    // {
+    //     inc01 = -1;
+    //     gTheta01 = 0;
+    // }
+    // if(gTheta0 == -135)
+    // {
+    //     inc01 = 0; 
+    //     gTheta01 = 0;
+    // }
 }
 
 void Player::Aiming(bool is_aiming)
