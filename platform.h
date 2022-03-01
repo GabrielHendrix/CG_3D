@@ -50,8 +50,6 @@ public:
     GLfloat GetL(){
         return length;
     };
-    // void Recria(GLfloat x, GLfloat y);
-    // bool Atingido(Fireball *fireball);
 };
 
 #endif	/* PLATFORM_H */

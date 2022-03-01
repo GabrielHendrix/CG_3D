@@ -1,305 +1,300 @@
 #include "enemy.h"
 #include <math.h>
+#include <GL/gl.h>
+#include <GL/glut.h>
+#include <string>
+#include <vector>
+#include <iostream>
 #include <stdio.h>
+#include <string.h>
+#include "imageloader.h"
 
 
-void normalizeEnemy(float a[3])
-{
-    double norm = sqrt(a[0]*a[0]+a[1]*a[1]+a[2]*a[2]); 
-    a[0] /= norm;
-    a[1] /= norm;
-    a[2] /= norm;
-}
-void crossEnemy(GLfloat a[3], GLfloat b[3], GLfloat out[3])
-{
-    out[0] = a[1]*b[2] - a[2]*b[1];
-    out[1] = a[2]*b[0] - a[0]*b[2];
-    out[2] = a[0]*b[1] - a[1]*b[0];
-}
-void Enemy::DrawRect(GLint height, GLint width, GLfloat R, GLfloat G, GLfloat B)
-{
-	/* Define cor dos vértices com os valores R, G e B variando de 0.0 a 1.0 */
-	glColor3f (R, G, B);
-	/* Desenhar um polígono branco (retângulo) */
-    GLint lenght = 2;
-    GLfloat materialEmission[] = { 0.00, 0.00, 0.00, 1.0};
-            GLfloat materialColor[] = { 1.0, 0.0, 1.0, 1.0};
-            GLfloat mat_specular[] = { 1.0, 0.0, 1.0, 1.0};
-            GLfloat mat_shininess[] = { 128 };
-            GLfloat norm[3], a[3], b[3];
-
-    glBegin(GL_QUADS);
-        glMaterialfv(GL_FRONT, GL_EMISSION, materialEmission);
-        glMaterialfv(GL_FRONT, GL_AMBIENT, materialColor);
-        glMaterialfv(GL_FRONT, GL_DIFFUSE, materialColor);
-        glMaterialfv(GL_FRONT, GL_SPECULAR, mat_specular);
-        glMaterialfv(GL_FRONT, GL_SHININESS, mat_shininess);
-        
-        // down face
-        a[0] = -width/2;
-        a[1] = 0;
-        a[2] = lenght;
-
-        b[0] = width/2;
-        b[1] = 0;
-        b[2] = 0.0;
-
-        crossEnemy(a,b,norm);
-        normalizeEnemy(norm);
-        glNormal3f(norm[0], norm[1], norm[2]);
-        glVertex3f (gX, -gY-height, 0.0);  // Lado Esquerdo Baixo 
-        glVertex3f (gX+width, -gY-height, 0.0); // Lado Direito Baixo
-        glVertex3f (gX+width, -gY-height, -lenght); // Lado Direito Cima
-        glVertex3f (gX, -gY-height, -lenght);  // Lado Esquerdo Cima
-
-        glVertex3f (-width/2, 0, 0.0);  // Lado Esquerdo Baixo 
-        glVertex3f (width/2, 0, 0.0); // Lado Direito Baixo        
-        glVertex3f (-width/2, 0, -lenght);  // Lado Esquerdo Cima
-        glVertex3f (width/2, 0, -lenght); // Lado Direito Cima
-        //left face
-        a[0] = -width/2;
-        a[1] = 0;
-        a[2] = -lenght;
-
-        b[0] = -width/2;
-        b[1] = height;
-        b[2] = 0.0;
-
-        crossEnemy(a,b,norm);
-        normalizeEnemy(norm);
-        glNormal3f(norm[0], norm[1], norm[2]);
-        glVertex3f (-width/2, 0, 0.0);  // Lado Esquerdo Cima
-        glVertex3f (-width/2, 0, -lenght); // Lado Direito Cima
-        glVertex3f (-width/2, height, -lenght); // Lado Direito Baixo
-        glVertex3f (-width/2, height, 0.0);  // Lado Esquerdo Baixo
-        
-        //right face
-        a[0] = width/2;
-        a[1] = height;
-        a[2] = 0.0;
-
-        b[0] = width/2;
-        b[1] = 0;
-        b[2] = -lenght;
-
-        crossEnemy(a,b,norm);
-        normalizeEnemy(norm);
-        glNormal3f(norm[0], norm[1], norm[2]);
-
-        glVertex3f (width/2, 0, 0.0);  // Lado Esquerdo Cima
-        glVertex3f (width/2, 0, -lenght); // Lado Direito Cima
-        glVertex3f (width/2, height, -lenght); // Lado Direito Baixo
-        glVertex3f (width/2, height, 0.0);  // Lado Esquerdo Baixo
-        
-        // front face
-        a[0] = width/2;
-        a[1] = height;
-        a[2] = -lenght;
-
-        b[0] = -width/2;
-        b[1] = 0;
-        b[2] = -lenght;
-
-        crossEnemy(a,b,norm);
-        normalizeEnemy(norm);
-        glNormal3f(norm[0], norm[1], norm[2]);
-        glVertex3f (-width/2, 0, -lenght);  // Lado Esquerdo Cima
-        glVertex3f (width/2, 0, -lenght); // Lado Direito Cima
-        glVertex3f (width/2, height, -lenght); // Lado Direito Baixo
-        glVertex3f (-width/2, height, -lenght);  // Lado Esquerdo Baixo 
-
-
-        // up face
-        a[0] = -width/2;
-        a[1] = height;
-        a[2] = -lenght;
-
-        b[0] = width/2;
-        b[1] = height;
-        b[2] = 0;
-
-        crossEnemy(a,b,norm);
-        normalizeEnemy(norm);
-        glNormal3f(norm[0], norm[1], norm[2]);
-        glVertex3f (width/2, height, 0.0); // Lado Direito Baixo        
-        glVertex3f (-width/2, height, 0.0);  // Lado Esquerdo Baixo
-        glVertex3f (-width/2, height, -lenght);  // Lado Esquerdo Cima
-        glVertex3f (width/2, height, -lenght); // Lado Direito Cima
-         
-        // back face
-        a[0] = -width/2;
-        a[1] = height;
-        a[2] = 0.0;
-
-        b[0] = gX+width;
-        b[1] = 0;
-        b[2] = 0.0;
-
-        crossEnemy(a,b,norm);
-        normalizeEnemy(norm);
-        glNormal3f(norm[0], norm[1], norm[2]);
-        glVertex3f (-width/2, 0, 0.0);  // Lado Esquerdo Cima
-		glVertex3f (width/2, 0, 0.0); // Lado Direito Cima
-		glVertex3f (width/2, height, 0.0); // Lado Direito Baixo
-		glVertex3f (-width/2, height, 0.0);  // Lado Esquerdo Baixo
-    glEnd();
+//Aponta para uma das Enemy de movimento e coloca na primeira frame
+void Enemy::drawInit(int movID){
+    currentMovID = movID;
+    currentFrame = 0;
 }
 
-
-void Enemy::DrawHead(GLfloat x, GLfloat y, GLfloat thetaWheel, GLfloat R, GLfloat G, GLfloat B)
-{
+//Desenha a proxima frame do movimento atual e retorna se ja chegou no final
+bool Enemy::drawNext(){
+    this->draw(this->currentMovID, this->currentFrame);
+    this->currentFrame++;
     
-    glPushMatrix();
-    glTranslatef(x, y, 0);
-    glRotatef(thetaWheel, 0, 0, 1);
-    DrawCircle(radiusWheel, R, G, B);
-    glPopMatrix();
+    return (this->currentFrame >= this->vecMeshes[this->currentMovID].size());
 }
 
-void Enemy::DrawCircle(GLint radius, GLfloat R, GLfloat G, GLfloat B)
-{
-    glColor3f (R, G, B);
-    glPointSize(1.0);
-    glBegin(GL_POLYGON);
-        for (int i = 0; i < 360; i+=1) 
-            // for (int j = 0; j < 200; j++)
-                // glVertex3f(radius * cos(i), radius * sin(i), (float)(-j/75));
-            glVertex3f(radius * cos(i), radius * sin(i), 0.0);
-    glEnd();
+
+//Carrega as Enemy de um movimento do caminho path e assumindo qtd arquivos
+int Enemy::loadMeshAnim(string path, int qtd){
+    vector<meshEnemy> vec;
+    meshEnemy m;
+    this->vecMeshes.push_back(vec);
+    int movID = this->vecMeshes.size()-1;
+    char str[7];
+    size_t index = path.find("#");
+    for(int i = 1; i<=qtd; i++){
+        snprintf (str, 7, "%06d", i);
+        path.replace(index, 6, str);
+        std::cout << path << std::endl; 
+        this->vecMeshes[movID].push_back(m);
+        this->vecMeshes[movID][this->vecMeshes[movID].size()-1].loadMesh(path);
+    }
+    return movID;
 }
 
-void Enemy::DrawArm(GLfloat x, GLfloat y, GLfloat theta, GLfloat theta2, GLfloat R, GLfloat G, GLfloat B)
-{
-    glPushMatrix();
-    glTranslatef(x, y, 0);
-    glRotatef(theta, 0, 0, 1);   
-    DrawRect(paddleHeight/2 - paddleHeight/10, memberWidth, R, G, B);
-    glTranslatef(0, paddleHeight/2 - paddleHeight/10, 0);
-    glRotatef(theta2, 0, 0, 1);   
-    DrawRect(paddleHeight/2 - paddleHeight/10, memberWidth, R, G, B);
-    glPopMatrix();
+//Desenha uma mesh com a respectiva textura
+void Enemy::draw(int movID, int frameId){
+    // glPushMatrix();
+    // glTranslatef(0, gY, gZ);
+    glScalef(baseHeight, baseHeight, baseHeight);
+    glRotatef(90, 0, 1, 0);
+    glRotatef(hDirection, 0, 1, 0);
+    if (this->texID != -1){
+        glEnable(GL_TEXTURE_2D);
+        glBindTexture (GL_TEXTURE_2D, this->texID);
+    }
+    this->vecMeshes[movID][frameId].draw();
+    if (this->texID != -1){
+        glDisable(GL_TEXTURE_2D);
+    }
+    // glPopMatrix();
+}
+
+//Le a textura
+bool Enemy::loadTexture(string path){
+    FILE* file= fopen(path.data(), "r");
     
+    Image* image = loadBMP(path.c_str());
+    this->texWidth = image->width;
+    this->texHeight = image->height;
+
+    glGenTextures( 1, &(this->texID) );
+    glBindTexture( GL_TEXTURE_2D, this->texID );
+    glTexEnvf( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE,GL_MODULATE );
+//    glTexEnvf( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE,GL_REPLACE );
+    glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,GL_LINEAR );
+    glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER,GL_LINEAR );
+    glTexImage2D(GL_TEXTURE_2D,                //Always GL_TEXTURE_2D
+                             0,                            //0 for now
+                             GL_RGB,                       //Format OpenGL uses for image
+                             this->texWidth, this->texHeight,  //Width and height
+                             0,                            //The border of the image
+                             GL_RGB, //GL_RGB, because pixels are stored in RGB format
+                             GL_UNSIGNED_BYTE, //GL_UNSIGNED_BYTE, because pixels are stored
+                                               //as unsigned numbers
+                             image->pixels);               //The actual pixel data
+    delete image;
 }
 
-void Enemy::DrawLeg(GLfloat x, GLfloat y, GLfloat theta1, GLfloat theta2, GLfloat R, GLfloat G, GLfloat B)
-{
-    glPushMatrix();
-    glTranslatef(x, y, 0);
-    glRotatef(theta1, 0, 0, 1);   
-    DrawRect(legHeight/2, memberWidth, R, G, B);
-    glTranslatef(0, legHeight/2, 0);
-    glRotatef(theta2, 0, 0, 1);   
-    DrawRect(legHeight/2, memberWidth, R, G, B);
-    glPopMatrix();
-    
+//função para carregar o OBJ
+bool meshEnemy::loadMesh(string path){
+    vector<int> vertIndex, uvIndex, normIndex;//indexadores para vertices, mapeamento de textura e normais
+    vertsPos.clear();
+    vertsNorm.clear();
+    vertsTex.clear();
+    vertsS.clear();
+    int i =0;
+    FILE* file= fopen(path.data(), "r");
+    if(file== NULL){
+        cout<< "falha ao carregar o arquivo"<< endl;
+        return false;
+    }
+    else{ 
+        while(1){
+            char lineHeader[128];
+            int res= fscanf(file, "%s", lineHeader);
+            if(res==EOF){
+                    break;
+            }
+            if(strcmp(lineHeader, "v") == 0){
+                posEnemy vert;
+                fscanf(file, "%f %f %f\n", &vert.x, &vert.y, &vert.z);
+                vertsPos.push_back(vert);
+            }
+            else if(strcmp(lineHeader,"vt")==0){
+                texEnemy vert;
+                fscanf(file, "%f %f\n", &vert.u, &vert.v);
+                vertsTex.push_back(vert);
+            }
+            else if(strcmp(lineHeader, "vn")==0){
+                normEnemy vert;
+                fscanf(file, "%f %f %f\n", &vert.x, &vert.y, &vert.z);
+                vertsNorm.push_back(vert);
+            }
+            else if(strcmp(lineHeader, "f")==0){
+                string v1, v2, v3;
+                unsigned int vertInd[3], uvInd[3], normInd[3];
+                int matches = fscanf(file, "%d/%d/%d %d/%d/%d %d/%d/%d\n", &vertInd[0], &uvInd[0], &normInd[0], &vertInd[1], &uvInd[1], &normInd[1], &vertInd[2], &uvInd[2], &normInd[2]);
+                if(matches !=9){
+                        printf("QUantidade de valores lidos diferente doesperado. Falha ao ler uma linha de face");
+                        return false;			
+                }
+                //Cria uma lista com os índices na ordem apropriada para o desenho das faces
+                //Esta é a lista de índices de vértices
+                vertIndex.push_back(vertInd[0]);
+                vertIndex.push_back(vertInd[1]);
+                vertIndex.push_back(vertInd[2]);
+                //Esta é a lista de índices de mapeamento de textura
+                uvIndex.push_back(uvInd[0]);
+                uvIndex.push_back(uvInd[1]);
+                uvIndex.push_back(uvInd[2]);
+                // Esta é a lista de índices de normais
+                normIndex.push_back(normInd[0]);
+                normIndex.push_back(normInd[1]);
+                normIndex.push_back(normInd[2]);
+            }
+        }
+        for(unsigned int i=0; i<vertIndex.size(); i++){
+            verticeStripEnemy vert;
+            vert.vPos.x = vertsPos[vertIndex[i]-1].x;
+            vert.vPos.y = vertsPos[vertIndex[i]-1].y;
+            vert.vPos.z = vertsPos[vertIndex[i]-1].z;
+            vert.vTex.u = vertsTex[uvIndex[i]-1].u;
+            vert.vTex.v = vertsTex[uvIndex[i]-1].v;
+            vert.vNorm.x = vertsNorm[normIndex[i]-1].x;
+            vert.vNorm.y = vertsNorm[normIndex[i]-1].y;
+            vert.vNorm.z = vertsNorm[normIndex[i]-1].z;
+            vertsS.push_back(vert);
+        }
+    }
+    return true;
 }
 
-void Enemy::DrawBody(GLfloat x, GLfloat y, GLfloat thetaWheel, GLfloat theta0, GLfloat theta1, GLfloat theta01, GLfloat theta11)
-{
-    int R, G, B;
-    R = 255;
-    G = 0;
-    B = 0; 
-    if(on_move == false)
-    {
-        glRotatef(direction,0,1,0);
-        if(aiming)
-        {
-            DrawArm(baseWidth, baseHeight, armAngle + 270, 0,R,G,B);
-        }
-        else
-        {
-            DrawArm(baseWidth, baseHeight, -170,0,R,G,B);
-        }
-        DrawLeg(baseWidth/2, 0, 180, 0,R,G,B);
-        DrawHead(0, baseHeight+radiusWheel, thetaWheel,R,G,B);
-        // DrawHead(0, baseHeight+baseHeight/2, thetaWheel,R,G,B);
-        DrawRect(baseHeight, baseWidth*1.5,R,G,B);
-        DrawArm(-baseWidth, baseHeight, 170,0,R,G,B);      
-        DrawLeg(-baseWidth/2, 0, 180, 0,R,G,B);
-    }
-    else if (on_move)
-    {
-        glRotatef(direction,0,1,0);
-        if(aiming)
-        {
-            DrawArm(0, baseHeight, armAngle + 270, 0,R,G,B);
-        }
-        else
-        {
-            DrawArm(0, baseHeight, theta0, 0,R,G,B);
-        }
-        DrawLeg(0, 0, theta0, theta01,R,G,B);
-        DrawHead(0, baseHeight+radiusWheel, thetaWheel,R,G,B);
-        // DrawHead(0, baseHeight+baseHeight/2, thetaWheel,R,G,B);
-        DrawRect(baseHeight, baseWidth,R,G,B);
-        DrawArm(0, baseHeight, theta1, 0,R,G,B);
-        DrawLeg(0, 0, theta1, theta11,R,G,B);
-    }
-    // printf("gX: %f\n", gX);
-    // printf("gy: %f\n", gY);
-    // printf("ground: %f\n", ground);
-    // printf("armAngle: %f\n", armAngle);
-}
-bool Enemy::GravityEffect(GLfloat dx, GLdouble deltaTime)
-{
-    if(ground < gY-legHeight)
-    {
-        // gY -= percentual*deltaTime;
-        gY = ground + legHeight;
-        // gX += (dx/9)*percentual*deltaTime;
-    }
+//desenha a malha
+void meshEnemy::draw(){
+    int cont=0;
+    GLfloat materialEmission[] = { 0.10, 0.10, 0.10, 1};
+    GLfloat materialColorA[] = { 0.1, 0.1, 0.1, 0.1};
+    GLfloat materialColorD[] = { .90, .90, .90, 1};
+    glColor3f(1,1,1);
 
-    return true; 
+    glMaterialfv(GL_FRONT, GL_EMISSION, materialEmission);
+    glMaterialfv(GL_FRONT, GL_AMBIENT, materialColorA);
+    glMaterialfv(GL_FRONT, GL_DIFFUSE, materialColorD);
+
+    for(unsigned int i=0; i<vertsS.size(); i=i+3){
+        glBegin(GL_TRIANGLE_STRIP);
+            for(int j=i; j<i+3; j++){
+                glTexCoord2f (vertsS[j].vTex.u, vertsS[j].vTex.v);
+                glNormal3f(vertsS[j].vNorm.x,vertsS[j].vNorm.y,vertsS[j].vNorm.z);
+                glVertex3f(vertsS[j].vPos.x,vertsS[j].vPos.y,vertsS[j].vPos.z);
+            }
+        glEnd();
+    }
 }
-void Enemy::MoveInX(GLfloat dx, GLdouble deltaTime)
+
+GLfloat degreeToRadEnemy(int degree)
 {
-    gX += dx*percentual*deltaTime/15;
-    if(dx > 0)
+	return (degree * M_PI)/180;
+}
+
+bool Enemy::GravityEffect(GLfloat delta, GLdouble deltaTime)
+{
+    GLfloat dx, dz;
+
+    if(delta > 0)
     {
-        direction = 0;
+        hDirection = direction;
     }
-    if(dx < 0)
+    if (delta < 0)
     {
-        direction = 180;
+        hDirection = direction + 180;    
     }
-    
-    if(ground < gY-legHeight)
-        gY = gY;
+    dx = cos(degreeToRadEnemy(direction)) * delta;
+    dz = sin(degreeToRadEnemy(direction)) * delta;
+
+
+    if(ground < gY)
+    {
+        gY -= percentual*deltaTime;
+        gX += (dx/9)*percentual*deltaTime;
+        gZ -= (dz/9)*percentual*deltaTime;
+        return true;
+    }
     else
-    gY = ground - (cos((abs(gTheta0)*M_PI)/180) * legHeight ); // * deltaTime/15;
-    gTheta0 += inc0 * abs(dx) ;
-    gTheta1 += inc1 * abs(dx);
-    gTheta01 += inc01 * abs(dx);
-    gTheta11 += inc11 * abs(dx);
-    if(gTheta01 == -45 || gTheta01 == 0)
-        inc01 *= -1;
-    if(gTheta11 == -45 || gTheta11 == 0)
-        inc11 *= -1;
-    if(gTheta1 == 225 || gTheta1 == 135)
-        inc1 *= -1;
-    if(gTheta0 == -225 || gTheta0 == -135)
-        inc0 *= -1;
-    if(gTheta1 == 225) 
     {
-        inc11 = 0;
-        gTheta11 = 0;
+        return false;
     }
-    if(gTheta1 == 135)
+    // if(ground < gY)
+    // {
+    //     // gY -= percentual*deltaTime;
+    //     gY = ground;
+    //     // gX += (dx/9)*percentual*deltaTime;
+    // }
+
+    // return true; 
+}
+void Enemy::MoveInX(GLfloat delta, GLdouble deltaTime)
+{
+    GLfloat dx, dz;
+
+    if(delta > 0)
     {
-        inc11 = -1; 
-        gTheta11 = 0;
+        hDirection = direction;
     }
-    if(gTheta0 == -225) 
+    if (delta < 0)
     {
-        inc01 = -1;
-        gTheta01 = 0;
+        hDirection = direction + 180;    
     }
-    if(gTheta0 == -135)
+    dx = cos(degreeToRadEnemy(direction)) * delta;
+    dz = sin(degreeToRadEnemy(direction)) * delta;
+
+    gX += dx*percentual*deltaTime/15;
+    gZ -= dz*percentual*deltaTime/15;    
+    
+    if(ground < gY-legHeight)
+        gY = gY-legHeight;
+    else
     {
-        inc01 = 0; 
-        gTheta01 = 0;
+        gY = ground;
     }
+    // gX += dx*percentual*deltaTime/15;
+    // if(dx > 0)
+    // {
+    //     direction = 0;
+    // }
+    // if(dx < 0)
+    // {
+    //     direction = 180;
+    // }
+    
+    // if(ground < gY)
+    //     gY = gY;
+    // else
+    // gY = ground - (cos((abs(gTheta0)*M_PI)/180) * legHeight ); // * deltaTime/15;
+    // gTheta0 += inc0 * abs(dx) ;
+    // gTheta1 += inc1 * abs(dx);
+    // gTheta01 += inc01 * abs(dx);
+    // gTheta11 += inc11 * abs(dx);
+    // if(gTheta01 == -45 || gTheta01 == 0)
+    //     inc01 *= -1;
+    // if(gTheta11 == -45 || gTheta11 == 0)
+    //     inc11 *= -1;
+    // if(gTheta1 == 225 || gTheta1 == 135)
+    //     inc1 *= -1;
+    // if(gTheta0 == -225 || gTheta0 == -135)
+    //     inc0 *= -1;
+    // if(gTheta1 == 225) 
+    // {
+    //     inc11 = 0;
+    //     gTheta11 = 0;
+    // }
+    // if(gTheta1 == 135)
+    // {
+    //     inc11 = -1; 
+    //     gTheta11 = 0;
+    // }
+    // if(gTheta0 == -225) 
+    // {
+    //     inc01 = -1;
+    //     gTheta01 = 0;
+    // }
+    // if(gTheta0 == -135)
+    // {
+    //     inc01 = 0; 
+    //     gTheta01 = 0;
+    // }
 }
 
 void Enemy::Aiming(bool is_aiming)
@@ -336,10 +331,12 @@ GLint Enemy::DetectGround(Platform *platforms, int len, GLfloat pos)
 
         // printf("(-gY + legHeight + pos) %f\n", -(gY - pos + legHeight) );
         GLfloat y = - (platforms[i].GetY() - pos);
-        if(((gX-baseWidth >= platforms[i].GetX()) && 
-            (gX+baseWidth <= (platforms[i].GetX() + platforms[i].GetW()))) &&
-            // gY - legHeight/4 >= y)
-            sqrt(pow((gY + legHeight) - platforms[i].GetY(),2)) <= legHeight)
+        if(((gX+(baseWidth/2)+memberWidth > platforms[i].GetX()) && (gX-(baseWidth/2)-memberWidth < (platforms[i].GetX() + platforms[i].GetW()))) &&
+            sqrt(pow((gY - legHeight) - y,2)) <= baseHeight+legHeight)
+        // if(((gX-baseWidth >= platforms[i].GetX()) && 
+        //     (gX+baseWidth <= (platforms[i].GetX() + platforms[i].GetW()))) &&
+        //     // gY - legHeight/4 >= y)
+        //     sqrt(pow((gY + legHeight) - platforms[i].GetY(),2)) <= legHeight)
         {
             if (ground <= platforms[i].GetY())
             {
@@ -432,55 +429,55 @@ void Enemy::Atira()
     t = fireball;
     fireballOn = true;
     
-    if (hDirection == -1)
-    {
-        if(!on_move)
-        {
-            x = baseWidth;
-            y = GetY() + baseHeight;
-        }
-        else if (on_move)
-        {
-            x = 0;
-            y = GetY() + baseHeight;
-        }
-        // RotatePoint(x, y, armAngle + 270, xa, ya);
-        // *fireball = Fireball(xa, ya, armAngle + 270);
-        *fireball = Fireball(x, y, armAngle + 270);
+    // if (hDirection == -1)
+    // {
+    //     if(!on_move)
+    //     {
+    //         x = baseWidth;
+    //         y = GetY() + baseHeight;
+    //     }
+    //     else if (on_move)
+    //     {
+    //         x = 0;
+    //         y = GetY() + baseHeight;
+    //     }
+    //     // RotatePoint(x, y, armAngle + 270, xa, ya);
+    //     // *fireball = Fireball(xa, ya, armAngle + 270);
+    //     *fireball = Fireball(x, y, armAngle + 270);
 
-    }
-    else
-    {
-        if(!on_move)
-        {
-            x = baseWidth;
-            y = GetY() + baseHeight;
-        }
-        else if (on_move)
-        {
-            x = baseHeight;
-            y = GetY() + baseHeight;
-        }
-        // RotatePoint(x, y, -armAngle - 270, xa, ya);
-        // *fireball = Fireball(xa, ya, -armAngle - 270);
-        *fireball = Fireball(x, y, -armAngle - 270);
-    } 
+    // }
+    // else
+    // {
+    //     if(!on_move)
+    //     {
+    //         x = baseWidth;
+    //         y = GetY() + baseHeight;
+    //     }
+    //     else if (on_move)
+    //     {
+    //         x = baseHeight;
+    //         y = GetY() + baseHeight;
+    //     }
+    //     // RotatePoint(x, y, -armAngle - 270, xa, ya);
+    //     // *fireball = Fireball(xa, ya, -armAngle - 270);
+    //     *fireball = Fireball(x, y, -armAngle - 270);
+    // } 
 }
 bool Enemy::Atingido(Fireball *fireball, GLfloat pos)
 {
-    GLfloat x, y;
-    if (fireball)
-    {
-        fireball->GetPos(x,y);
+    // GLfloat x, y;
+    // if (fireball)
+    // {
+    //     fireball->GetPos(x,y);
 
-        if(abs(sqrt(pow(gX - (-x + pos), 2))) < baseWidth &&
-           abs(sqrt(pow(gY - (y), 2))) < (baseHeight*1.5))
-        {
+    //     if(abs(sqrt(pow(gX - (-x + pos), 2))) < baseWidth &&
+    //        abs(sqrt(pow(gY - (y), 2))) < (baseHeight*1.5))
+    //     {
             
-            defeat = true;
-            return true;
-        }
-        return false;
-    }  
+    //         defeat = true;
+    //         return true;
+    //     }
+    //     return false;
+    // }  
     return false;     
 }

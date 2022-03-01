@@ -54,18 +54,6 @@ class Player {
     GLfloat gThetaJump11, percentual, legHeight, memberWidth, paddleHeight, paddleWidth, baseHeight, baseWidth;
     Fireball* t;
     bool on_move, on_jump, aiming, fireballOn, defeat, colliderState;
-    private:
-        void DrawRect(  GLint height, GLint width, 
-                        GLfloat R, GLfloat G, GLfloat B);
-        void DrawCircle(  GLint radius, GLfloat R, 
-                        GLfloat G, GLfloat B);
-        void DrawHead(GLfloat x, GLfloat y, GLfloat thetaWheel, 
-                        GLfloat R, GLfloat G, GLfloat B);
-        void DrawArm(   GLfloat x, GLfloat y, GLfloat theta1, GLfloat theta2, GLfloat R, GLfloat G, GLfloat B);
-        void DrawLeg(   GLfloat x, GLfloat y, GLfloat theta1, GLfloat theta2, GLfloat R, GLfloat G, GLfloat B);
-        
-        void DrawBody( GLfloat x, GLfloat y, GLfloat thetaWheel, 
-                        GLfloat theta1, GLfloat theta2, GLfloat theta3, GLfloat theta4);
 
     public:
         GLuint texID;
@@ -111,13 +99,6 @@ class Player {
             currentFrame = -1;
             vecMeshes.clear();
         };
-
-
-        // void Draw(){ 
-        //     // DrawBody(gX, gY, gThetaWheel, gTheta0, 
-        //     //         gTheta1, gTheta01, gTheta11);
-        // };
-        //Variaveis de textura
         ~Player(){
         };
         
@@ -159,6 +140,9 @@ class Player {
         };
         GLfloat GetLegHeight(){
             return legHeight;
+        };
+        GLfloat GetPlayerCamHeight(){
+            return legHeight*2 + baseHeight;
         };
         GLint GetHDirection(){
             return hDirection;

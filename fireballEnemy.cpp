@@ -1,4 +1,4 @@
-#include "fireball.h"
+#include "FireballEnemyEnemy.h"
 #include <math.h>
 #include <stdio.h>
 #include <GL/gl.h>
@@ -6,7 +6,7 @@
 #include <GL/glut.h>
 #include <stdlib.h>
 
-void Fireball::DrawCircle(GLint radius, GLfloat R, GLfloat G, GLfloat B)
+void FireballEnemy::DrawCircle(GLint radius, GLfloat R, GLfloat G, GLfloat B)
 {
     glColor3f (R, G, B);
     glPointSize(3.0);
@@ -16,10 +16,10 @@ void Fireball::DrawCircle(GLint radius, GLfloat R, GLfloat G, GLfloat B)
     glEnd();
 }
 
-void Fireball::DrawFireball(GLfloat x, GLfloat y)
+void FireballEnemy::DrawFireballEnemy(GLfloat x, GLfloat y)
 {
     GetPos(x,y);
-    // glPushMatrix();
+    glPushMatrix();
     glTranslatef(-x, y, 0);
     GLfloat materialEmission[] = { 0.00, 0.00, 0.00, 1.0};
 	GLfloat materialColor[] = { 1.0, 0.0, 0.0, 1.0};
@@ -31,11 +31,11 @@ void Fireball::DrawFireball(GLfloat x, GLfloat y)
 	glMaterialfv(GL_FRONT, GL_SPECULAR, mat_specular);
 	glMaterialfv(GL_FRONT, GL_SHININESS, mat_shininess);
     glColor3f(255, 0, 0);
-    glutSolidSphere(radiusFireball, 50,50);
-    // glPopMatrix();
+    glutSolidSphere(radiusFireballEnemy, 50,50);
+    glPopMatrix();
 }
 
-bool Fireball::DetectBackground(Platform *platforms, int len, GLfloat gXpos, GLfloat pos)
+bool FireballEnemy::DetectBackground(Platform *platforms, int len, GLfloat gXpos, GLfloat pos)
 {
     GLfloat y = - (platforms[0].GetY() - pos);
     if( sqrt(pow((gXpos - gX) - platforms[0].GetX() - (platforms[0].GetW()/2), 2)) > platforms[0].GetW()/2 ||
@@ -46,7 +46,7 @@ bool Fireball::DetectBackground(Platform *platforms, int len, GLfloat gXpos, GLf
     return false;
 }
 
-bool Fireball::DetectBulletCollision(Platform *platforms, int len, GLfloat gXpos, GLfloat posY)
+bool FireballEnemy::DetectBulletCollision(Platform *platforms, int len, GLfloat gXpos, GLfloat posY)
 {
         
     for (int i = 0; i < len; i++)
@@ -61,7 +61,7 @@ bool Fireball::DetectBulletCollision(Platform *platforms, int len, GLfloat gXpos
     return false;
 }
 
-void Fireball::Move(GLfloat deltaTime)
+void FireballEnemy::Move(GLfloat deltaTime)
 {
     if (gDirectionAng < -0.1)
     {

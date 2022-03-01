@@ -5,8 +5,8 @@
 #include <math.h>
 #include <stdio.h>
 #include "player.h"
-#include "fireball.h"
-#include "enemy.h"
+// #include "fireball.h"
+// #include "enemy.h"
 #include "platform.h"
 #include <string>
 #include <cstring>
@@ -41,10 +41,11 @@ int VectorPlatformsCreator();
 int CalculatesViewsize();
 // camera parameters
 int buttonDown = 0;
-double camXYAngle=0;
-double camXZAngle=0;
-int lastX = 0;
-int lastY = 0;
+double camXYAngle;
+double camXZAngle;
+int lastX;
+int lastY;
+GLfloat ballZ;
 int vet[9999]; 
 static char str[1000];
 void * font = GLUT_BITMAP_9_BY_15;
@@ -57,14 +58,16 @@ Enemy* enemiesPointer;
 GLint collisionDetect, aux, bgDetect, damage, ind, ViewingWidth, ViewingHeight, ground;
 GLfloat shootAngle, previousGround, newGround, jumpSize, deltaX, mousePosY, detectedEnemyGnd, enemyGnd;
 
+
 //ID das meshes lidas
 int movIdle = -1;
+int movRunEnemy[9999];
 int movPunch = -1;
-int movKick = -1;
+int movRun = -1;
 int movDance = -1;
 
 //Controles dos golpes
-int kicking = 0;
+int running = 0;
 int punching = 0;
 int dancing = 0;
 int acting = 0;
@@ -73,13 +76,22 @@ int lastTimeAnim = 0;
 int updateDrawing = 0;
 
 //Usar meshlab para obter os pontos abaixo
-void desenhaJogador(){
+void drawPlayer(){
      // glMatrixMode(GL_MODELVIEW);
      
-//    //Escolhe entre iniciar o desenho do chute ou soco
-//    if (kicking && !acting){
-//        player.drawInit(movKick);
-//        acting = 1;
+     //Escolhe entre iniciar o desenho do chute ou soco
+     if (running && !acting){
+          player.drawInit(movRun);
+          acting = 1;
+     }
+     else if(!running && acting){
+          player.drawInit(movIdle);
+          acting = 0;
+     }
+     // if (!running && !acting){
+     //      player.drawInit(movIdle);
+     //      acting = 1;
+     // }
 //    } else if (punching && ! acting){
 //        player.drawInit(movPunch);
 //        acting = 1;
@@ -95,7 +107,21 @@ void desenhaJogador(){
           player.drawInit(movIdle);
           acting = 0;
           punching = 0;
-          kicking = 0;
+          running = 0;
+          dancing = 0;
+     }
+}
+
+//Usar meshlab para obter os pontos abaixo
+void drawEnemy(int iter){
+     //Desenha as proximas frames ateh acabar
+     int rtn = enemiesPointer[iter].drawNext();
+     //Reinicia com o movimento de parado esperando a luta
+     if (rtn){
+          enemiesPointer[iter].drawInit(movRunEnemy[iter]);
+          acting = 0;
+          punching = 0;
+          running = 0;
           dancing = 0;
      }
 }
@@ -115,7 +141,10 @@ void InitGame(const std::string arg)
      incAirControl = 0;
      numberOfEnemies = CalculatesNumberOfEnemies();
      numberOfPlatforms = CalculatesNumberOfPlatforms();
-     
+     camXYAngle=0;
+     camXZAngle=0;
+     lastX = 0;
+     lastY = 0;
      enemiesPointer = NULL;
      aux = CalculatesViewsize();
      // Viewing dimensions
@@ -167,42 +196,6 @@ int StringToInt(std::string value)
      return atoi(token);
 }
 
-void PlatformsInsertionSort(int size)
-{
-     int x, i, j, aux;
-     int vetAux[size];
-     for(i = 0; i < size; i++)
-     {
-          vet[i] = i;
-          vetAux[i] = platforms[i].GetX();
-     }
-     // for(i = 0; i < size; i++)
-     // {
-     //      vet[i] = i;
-     //      vetAux[i] = i;
-     // }
-     i = 0;
-     for(i = i + 1; i <= size-1; i++)
-     {
-          j = i;
-          x = vetAux[i];
-          aux = vet[i];
-          while(j > 0 && vetAux[j - 1] > x)
-          {
-               vetAux[j] = vetAux[j - 1];
-               vet[j] = vet[j - 1];
-               j = j - 1;
-          }
-          vetAux[j] = x;
-          vet[j] = aux;
-     }
-     for(i = 0; i < size; i++)
-     {
-          printf("vet[%d]: %d\n", i, vet[i]);
-     }
-}
-
-
 GLint CalculatesViewsize()
 {
      boost::property_tree::ptree pt1;
@@ -246,7 +239,6 @@ GLint CalculatesViewsize()
                }
           }
      }
-     PlatformsInsertionSort(iter);
      return viewSize;
 }
 
@@ -286,7 +278,6 @@ GLint VectorPlatformsCreator()
                }
           }
      }
-     PlatformsInsertionSort(iter);
      return iter;
 }
 
@@ -325,7 +316,7 @@ int CalculatesLocationAndSizeOfPlayer()
                          }
                          if (fill == "red")
                          {
-                              enemies.push_back(Enemy(StringToInt(cx), StringToInt(cy), (StringToInt(radius)*3)/130.0, StringToInt(radius)));
+                              enemies.push_back(Enemy(StringToInt(cx), StringToInt(cy), 0, (StringToInt(radius)*3)/130.0, StringToInt(radius)));
                          }
                     }
                }
@@ -427,6 +418,65 @@ void PrintLife(GLfloat x, GLfloat y)
           tmpStr++;
      }
 }
+//Funcao auxiliar para normalizar um vetor a/|a|
+void normalize(float a[3])
+{
+    double norm = sqrt(a[0]*a[0]+a[1]*a[1]+a[2]*a[2]); 
+    a[0] /= norm;
+    a[1] /= norm;
+    a[2] /= norm;
+}
+
+//Funcao auxiliar para fazer o produto vetorial entre dois vetores a x b = out
+void cross(float a[3], float b[3], float out[3])
+{
+    out[0] = a[1]*b[2] - a[2]*b[1];
+    out[1] = a[2]*b[0] - a[0]*b[2];
+    out[2] = a[0]*b[1] - a[1]*b[0];
+}
+
+double degToRad(int degree)
+{
+	return (degree * M_PI)/180;
+}
+
+void MygluLookAt(
+        GLdouble eyex, GLdouble eyey, GLdouble eyez, 
+        GLdouble centerx, GLdouble centery, GLdouble centerz, 
+        GLdouble upx, GLdouble upy, GLdouble upz)
+{
+    // float forward[3], side[3], up[3];
+    //column-major order
+    GLfloat m[4][4] = { 1,0,0,0,
+                        0,1,0,0,
+                        0,0,1,0,
+                        0,0,0,1};
+
+	//COLOQUE SEU CODIGO AQUI
+    GLfloat forward[3]{(GLfloat)eyex, (GLfloat)eyey, (GLfloat)eyez}, side[3], up[3]{(GLfloat)upx, (GLfloat)upy, (GLfloat)upz};
+
+
+	normalize(forward);		
+	m[0][2] = forward[0],
+	m[1][2] = forward[1],
+	m[2][2] = forward[2];
+
+	cross(up, forward, side);
+	normalize(side);
+    m[0][0] = side[0],
+	m[1][0] = side[1],
+	m[2][0] = side[2];
+    cross(forward,side,up);
+    normalize(up);
+    m[0][1] = up[0],
+	m[1][1] = up[1],
+	m[2][1] = up[2];
+
+	//COLOQUE SEU CODIGO AQUI
+    glMultMatrixf(&m[0][0]);
+    glTranslatef(-eyex, -eyey, -eyez);
+
+}
 
 void renderScene(void)
 {
@@ -443,24 +493,23 @@ void renderScene(void)
           
           //Utiliza uma esfera de raio zoom para guiar a posicao da camera
           //baseada em dois angulos (do plano XZ e do plano XY)
-          gluLookAt( sin(camXZAngle*M_PI/180)*cos((camXYAngle*M_PI/180)),
-                                             sin((camXYAngle*M_PI/180)),
-                    cos(camXZAngle*M_PI/180)*cos((camXYAngle*M_PI/180)),
-                    0, 0, 0,
+          // gluLookAt( sin(camXZAngle*M_PI/180)*cos((camXYAngle*M_PI/180)),
+          //                                    sin((camXYAngle*M_PI/180)),
+          //           cos(camXZAngle*M_PI/180)*cos((camXYAngle*M_PI/180)),
+          //           0, 0, 0,
+          //           0, 1, 0);
+  
+          
+          gluLookAt(-ViewingHeight/4, 0, 0,//-ViewingHeight/4,
+                    ViewingHeight/2, 0, 0,
                     0, 1, 0);
-          // GLfloat light_position[] = { 0, 0, 0, 1.0 };
-          // glLightfv(  GL_LIGHT0, GL_POSITION, light_position);
+          glRotatef((int)camXZAngle,0,0,1);
+          glRotatef((int)camXYAngle,0,1,0);
+          glTranslatef(0,-(player.GetY()+player.GetPlayerCamHeight()),-player.GetZ());
+       
           GLfloat light_position[] = {0, 140, -20, 1};
-          glLightfv(GL_LIGHT0,GL_POSITION,light_position); //GL_SPOT_DIRECTION
-          glDisable(GL_LIGHTING);
-          glPointSize(15);
-          glColor3f(1.0,1.0,0.0);
-          glBegin(GL_POINTS);
-               glVertex3f(light_position[0],light_position[1],light_position[2]);
-          glEnd();    
-          glEnable(GL_LIGHTING);
-          // GLfloat light_position1[] = { 10.0, (GLfloat) ViewingHeight, 10, 1.0 };
-          // glLightfv(  GL_LIGHT1, GL_POSITION, light_position1);
+          glLightfv(GL_LIGHT0,GL_POSITION,light_position); //GL_SPOT_DIRECTION GL_POSITION
+
           if(!keyStatus[(int)('r')])
           {
                if(damage <= 0)
@@ -480,106 +529,57 @@ void renderScene(void)
                     // Clear the screen.                                                         
                     // glClear(GL_COLOR_BUFFER_BIT);
                
-                    // glDisable(GL_LIGHTING);
-                    // glDisable(GL_LIGHT0);
-                    // glDisable(GL_DEPTH_TEST);
-                    // glDisable(GL_CULL_FACE);
-                         glPushMatrix();
-                         glTranslatef(-player.GetX(),background[0].GetY() + (ViewingWidth/2),0);
-                         background[0].Draw();
-                         glPopMatrix();
-                    // glEnable(GL_LIGHTING);
-                    // glEnable(GL_LIGHT0);
-                    // glEnable(GL_DEPTH_TEST);
-                    // glEnable(GL_CULL_FACE); 
-                    
-                    
-                    //* Enemy 
-
-                    if(fireball) 
-                    {
-                         fireball->Draw();      
-                    }
-          
-                    if(fireballEnemy)
-                    {
-                         GLfloat xAux, yAux;
-                         glPushMatrix();
-                         fireballEnemy->GetPos(xAux, yAux);
-                         glTranslatef(enemiesPointer[ind].GetX()- player.GetX(), 0,0);
-                         fireballEnemy->Draw();
-                         glPopMatrix();
-                    }
-                    
                     glPushMatrix();
                     glTranslatef(-player.GetX(),background[0].GetY() + (ViewingWidth/2),0);
-
+                    background[0].Draw();
+                    glPopMatrix();
+  
+                    if(fireball) 
+                    {
+                         glPushMatrix();
+                         glTranslatef(0,0,ballZ);
+                         fireball->Draw();      
+                         glPopMatrix();
+                    }
+          
+                    // if(fireballEnemy)
+                    // {
+                    //      GLfloat xAux, yAux;
+                    //      glPushMatrix();
+                    //      fireballEnemy->GetPos(xAux, yAux);
+                    //      glTranslatef(enemiesPointer[ind].GetX()- player.GetX(), 0,0);
+                    //      fireballEnemy->Draw();
+                    //      glPopMatrix();
+                    // }
+                    
                     for (int j = numberOfPlatforms-1; j >= 0; j--)
                     {
-                         platforms[vet[j]].Draw();
+                         glPushMatrix();
+                         glTranslatef(-player.GetX(),background[0].GetY() + (ViewingWidth/2),0);
+                         platforms[j].Draw();
+                         glPopMatrix();
                     }
-                    glPopMatrix(); 
-                    glDisable(GL_CULL_FACE);
-                         desenhaJogador();
-                    glEnable(GL_CULL_FACE);  
-                    
-                    // glPushMatrix();
-                    // glTranslatef(-player.GetX(),background[0].GetY() + (ViewingWidth/2),0);
-
-                    // for (int j = 0; j < numberOfPlatforms; j++)
-                    // for (int j = numberOfPlatforms-1; j >= 0; j--)
-                    // {
-                    //      GLfloat auxY = - (platforms[vet[j]].GetY() - (background[0].GetY() + (ViewingWidth/2)));
-                    //      if (player.GetX() < platforms[vet[j]].GetX() || player.GetY() > auxY)
-                    //      {
-                    //           // printf("platform GY: %f \n", auxY);
-                    //           platforms[vet[j]].Draw();
-                    //      }
-                    // }
-                    // glPopMatrix();
-                    // player.Draw();
-          
-               
-                    
-                    // printf("player GY: %f", player.GetY());
-
-                    // for (int i = 0; i < numberOfEnemies; i++)
+                    drawPlayer();
+                    // for (int i = 0; i < 1; i++)
                     // {  
                     //      if(!enemiesPointer[i].GetDefeatState())
                     //      {
                     //           glPushMatrix(); 
                     //           glTranslatef(enemiesPointer[i].GetX() - player.GetX(), enemiesPointer[i].GetY(),0);
-                    //           enemiesPointer[i].Draw();
+                    //           drawEnemy(i);
                     //           glPopMatrix();
                     //      }
                     // }
-                    // glPushMatrix();
-                    // glTranslatef(-player.GetX(),background[0].GetY() + (ViewingWidth/2),0);
 
-                    // // for (int j = 0; j < numberOfPlatforms; j++)
-                    // for (int j = numberOfPlatforms-1; j >= 0; j--)
-                    // {
-                    //      GLfloat auxY = - (platforms[vet[j]].GetY() - (background[0].GetY() + (ViewingWidth/2)));
-                    //      if (player.GetX() > platforms[vet[j]].GetX()  && player.GetY() < auxY)
-                    //      {
-                    //           platforms[vet[j]].Draw();
-                    //      }
-                    // }
-                    // glPopMatrix();
                     glDisable(GL_LIGHTING);
                     glDisable(GL_LIGHT0);
                     glDisable(GL_DEPTH_TEST);
-                    glDisable(GL_CULL_FACE);
-                         // glLoadIdentity();
-                         // glClearColor (0.30, 0.30, 1.0, 0.0);
-                         // // glClearColor (0.0,0.0,0.0,1.0);
-                         // glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
                          PrintLife(-ViewingWidth/2 + 20, ViewingHeight/2 - 10);
                          PrintScore(5, ViewingHeight/2 - 5);
                     glEnable(GL_LIGHTING);
                     glEnable(GL_LIGHT0);
                     glEnable(GL_DEPTH_TEST);
-                    glEnable(GL_CULL_FACE); 
+                    // glEnable(GL_CULL_FACE); 
                }
                glutSwapBuffers(); // Desenha the new frame of the game.
      }
@@ -596,18 +596,26 @@ void keyPress(unsigned char key, int x, int y)
           case 'a':
           case 'A':
                keyStatus[(int)('a')] = 1; //Using keyStatus trick
+               // if (acting && !running) break;
+               // running = 1;
                break;
           case 'd':
           case 'D':
                keyStatus[(int)('d')] = 1; //Using keyStatus trick
+               // if (acting && !running) break;
+               // running = 1;
                break; 
           case 's':
           case 'S':
                keyStatus[(int)('s')] = 1; //Using keyStatus trick
+               if (acting) break;
+               running = 1;
                break;
           case 'w':
           case 'W':
                keyStatus[(int)('w')] = 1; //Using keyStatus trick
+               if (acting) break;
+               running = 1;
                break; 
           case ' ':
                keyStatus[(int)(' ')] = 1;
@@ -619,6 +627,10 @@ void keyPress(unsigned char key, int x, int y)
           case 't':
           case 'T':
                keyStatus[(int)('t')] = 1; //Using keyStatus trick
+               break;
+          case 'x':
+          case 'X':
+               keyStatus[(int)('x')] = 1; //Using keyStatus trick
                break;
           case 'y':
           case 'Y':
@@ -740,24 +752,33 @@ void init(void)
      glEnable(GL_LIGHT0);
      // glEnable(GL_LIGHT1);
      glEnable(GL_DEPTH_TEST);
-     glDepthFunc(GL_LEQUAL);
-     glDepthMask(GL_TRUE);
-     glDepthRange(0.0, 1.0);
-     glEnable(GL_CULL_FACE);
-     glCullFace(GL_BACK);
-     glFrontFace(GL_CW);
-     movIdle =  player.loadMeshAnim("Blender/megaman_run/megaman_run_######.obj", 12);
+     // glDepthFunc(GL_LEQUAL);
+     // glDepthMask(GL_TRUE);
+     // glDepthRange(0.0, 1.0);
+     // glEnable(GL_CULL_FACE);
+     // glCullFace(GL_BACK);
+     // glFrontFace(GL_CW);
+     movIdle =  player.loadMeshAnim("Blender/megaman_idle/megaman_idle_######.obj", 14);
+     movRun =  player.loadMeshAnim("Blender/megaman_run/megaman_run_######.obj", 12);
      player.loadTexture("Blender/megaman_texture.bmp");
      player.drawInit(movIdle);
-     glMatrixMode(GL_PROJECTION); // Select the projection matrix    
-     // gluPerspective ((GLfloat)ViewingWidth, (GLfloat)ViewingWidth, 
-               //     -100, 100);
-     glOrtho(-(ViewingWidth/2),     // X coordinate of left edge             
-               (ViewingWidth/2),     // X coordinate of right edge            
-               -(ViewingHeight/2),     // Y coordinate of bottom edge             
-               (ViewingHeight/2),     // Y coordinate of top edge             
-               -100,     // Z coordinate of the “near” plane            
-               100);    // Z coordinate of the “far” plane
+
+     // movIdleEnemy =  enemy.loadMeshAnim("Blender/megaman_idle/megaman_idle_######.obj", 14);
+     for (int i = 0; i < 1; i++)
+     {  
+          movRunEnemy[i] =  enemiesPointer[i].loadMeshAnim("Blender/megaman_run/megaman_run_######.obj", 12);
+          enemiesPointer[i].loadTexture("Blender/megaman_texture.bmp");
+          enemiesPointer[i].drawInit(movRunEnemy[i]);
+     }
+     // glMatrixMode(GL_PROJECTION); // Select the projection matrix    
+     // gluPerspective (50, 1, 
+     //               5, 200);
+     // glOrtho(-(ViewingWidth/2),     // X coordinate of left edge             
+     //           (ViewingWidth/2),     // X coordinate of right edge            
+     //           -(ViewingHeight/2),     // Y coordinate of bottom edge             
+     //           (ViewingHeight/2),     // Y coordinate of top edge             
+     //           -100,     // Z coordinate of the “near” plane            
+     //           100);    // Z coordinate of the “far” plane
     
 //     gluLookAt(1,2,5, 0,0,0, 0,1,0);
 
@@ -803,14 +824,14 @@ void idle(void)
                enemiesPointer[ind].SetArmAngle(shootAngle);
                enemiesPointer[ind].Aiming(true);
           }
-          if((currentTime - deltaTimeShoot) > 1000 && !fireballEnemy && !enemiesPointer[ind].GetDefeatState())
-          {
-               deltaTimeShoot = glutGet(GLUT_ELAPSED_TIME);
-               enemiesPointer[ind].SetArmAngle(shootAngle);
+          // if((currentTime - deltaTimeShoot) > 1000 && !fireballEnemy && !enemiesPointer[ind].GetDefeatState())
+          // {
+          //      deltaTimeShoot = glutGet(GLUT_ELAPSED_TIME);
+          //      enemiesPointer[ind].SetArmAngle(shootAngle);
                
-               enemiesPointer[ind].Atira();
-               fireballEnemy = enemiesPointer[ind].GetFireball();               
-          }
+          //      enemiesPointer[ind].Atira();
+          //      fireballEnemy = enemiesPointer[ind].GetFireball();               
+          // }
           auxGround = player.DetectGround(&platforms[0], &enemiesPointer[0], numberOfPlatforms, numberOfEnemies, background[0].GetY() + (ViewingWidth/2));
           collisionDetect = player.DetectCollision(&platforms[0], &enemiesPointer[0], numberOfPlatforms, numberOfEnemies, background[0].GetY() + (ViewingWidth/2));
           bgDetect = player.DetectBackground(&background[0], 1, background[0].GetY() + (ViewingWidth/2));
@@ -825,21 +846,23 @@ void idle(void)
           player.SetGround(-newGround);
           if(updateDrawing)
           {
-               if(keyStatus[(int)('4')])
-               {
-                    camXZAngle-=1;
-               }
-               if(keyStatus[(int)('6')])
-               {
-                    camXZAngle+=1;
-               }
                if(keyStatus[(int)('2')])
                {
-                    camXYAngle-=1;
+                    if(camXZAngle > -60)
+                         camXZAngle-=2;
                }
                if(keyStatus[(int)('8')])
                {
-                    camXYAngle+=1;
+                    if(camXZAngle < 60)
+                         camXZAngle+=2;
+               }
+               if(keyStatus[(int)('4')])
+               {
+                    camXYAngle-=2;
+               }
+               if(keyStatus[(int)('6')])
+               {
+                    camXYAngle+=2;
                }
           }
           
@@ -857,17 +880,20 @@ void idle(void)
 
           if(keyStatus[(int)('s')] && !onJump && !onFall)
           {
+               running = 1;
                player.Move(-inc,timeDiference);
                player.OnMove(true);
           }
           
           if(keyStatus[(int)('w')] && !onJump && !onFall)
           {
+               running = 1;
                player.Move(inc,timeDiference);
                player.OnMove(true);
           }
           if(!keyStatus[(int)('a')] && !keyStatus[(int)('d')] && !keyStatus[(int)('w')] && !keyStatus[(int)('s')] && !onJump && !onFall)
           {
+               running = 0;
                player.OnMove(false);
                player.OnJump(false);
           }
@@ -887,7 +913,7 @@ void idle(void)
           if(onJump)
           {
                
-               if(keyStatus[(int)('a')])
+               if(keyStatus[(int)('s')])
                {
                     if(collisionDetect==2)
                     {
@@ -895,7 +921,7 @@ void idle(void)
                          deltaX = -inc;
                     }
                }
-               else if(keyStatus[(int)('d')])
+               else if(keyStatus[(int)('w')])
                {
                     if(collisionDetect==2)
                     {
@@ -916,12 +942,12 @@ void idle(void)
           {
                onFall = player.GravityEffect(deltaX, timeDiference);
                player.OnJump(onFall);
-               if(keyStatus[(int)('a')])
+               if(keyStatus[(int)('s')])
                {
                     if(deltaX > 0)
                          deltaX -= deltaX*0.1;
                }
-               else if(keyStatus[(int)('d')])
+               else if(keyStatus[(int)('w')])
                {
                     if(deltaX < 0)
                          deltaX -= deltaX*0.1;
@@ -971,82 +997,82 @@ void idle(void)
           
           }
 
-          if(fireballEnemy)
-          {    
-               fireballEnemy->Move(timeDiference);
+          // if(fireballEnemy)
+          // {    
+          //      fireballEnemy->Move(timeDiference);
                
-               if (fireballEnemy->DetectBulletCollision(&platforms[0], 
-               numberOfPlatforms, enemiesPointer[ind].GetX(), 
-               background[0].GetY() + (ViewingWidth/2)) ||
-               fireballEnemy->DetectBackground(&background[0], 
-               numberOfPlatforms, enemiesPointer[ind].GetX(), 
-               background[0].GetY() + (ViewingWidth/2)))
-               { 
-                    fireballEnemy = NULL;
-                    enemiesPointer[ind].DeleteFireball();
-               }
+          //      if (fireballEnemy->DetectBulletCollision(&platforms[0], 
+          //      numberOfPlatforms, enemiesPointer[ind].GetX(), 
+          //      background[0].GetY() + (ViewingWidth/2)) ||
+          //      fireballEnemy->DetectBackground(&background[0], 
+          //      numberOfPlatforms, enemiesPointer[ind].GetX(), 
+          //      background[0].GetY() + (ViewingWidth/2)))
+          //      { 
+          //           fireballEnemy = NULL;
+          //           enemiesPointer[ind].DeleteFireball();
+          //      }
 
-               if (player.Atingido(fireballEnemy, enemiesPointer[ind].GetX()))
-               {
-                    fireballEnemy = NULL;
-                    enemiesPointer[ind].DeleteFireball();
-                    if(damage > 0)
-                         damage -= ViewingWidth/20;
-               }
+          //      if (player.Atingido(fireballEnemy, enemiesPointer[ind].GetX()))
+          //      {
+          //           fireballEnemy = NULL;
+          //           enemiesPointer[ind].DeleteFireball();
+          //           if(damage > 0)
+          //                damage -= ViewingWidth/20;
+          //      }
           
-          }
-          for(int i=0; i<numberOfEnemies; i++)
-          {
-               if(fireball)
-               {
-                    if (enemiesPointer[i].Atingido(fireball, player.GetX()) &&
-                         !enemiesPointer[i].GetDefeatState())
-                    {
-                         fireball = NULL;
-                         delete fireball;
-                         player.DeleteFireball();
-                    }
-               }
-               if(!enemiesPointer[i].GetGroundState() && !enemiesPointer[i].GetDefeatState())
-               {
-                    detectedEnemyGnd = enemiesPointer[i].DetectGround(&platforms[0], 
-                                                       numberOfPlatforms,
-                                                       background[0].GetY() + (ViewingWidth/2));
-                    if(detectedEnemyGnd != -8888)
-                    {
-                         enemyGnd = platforms[detectedEnemyGnd].GetY()  - (background[0].GetY() + (ViewingWidth/2));
-                         gndIsPlat = true;
-                    }
-                    else
-                    {
-                         gndIsPlat = false;
-                         enemyGnd = ViewingHeight/2;
-                    }
-                    enemiesPointer[i].SetGround(-enemyGnd, gndIsPlat, detectedEnemyGnd);
-                    enemiesPointer[i].GravityEffect(0,timeDiference);
-               }
-               // Control animationb
-               if (enemiesPointer[i].DetectCollision(&platforms[0], 
-                                             numberOfPlatforms, 
-                                             background[0].GetY() + (ViewingWidth/2)) || 
-                                             enemiesPointer[i].DetectBackground(&background[0], 
-                                             1, 
-                                             background[0].GetY() + (ViewingWidth/2)) && 
-                                             !enemiesPointer[i].GetDefeatState())
-               {
-                    enemiesPointer[i].SetHDirection(-1);
-               }
+          // }
+          // for(int i=0; i<numberOfEnemies; i++)
+          // {
+          //      if(fireball)
+          //      {
+          //           if (enemiesPointer[i].Atingido(fireball, player.GetX()) &&
+          //                !enemiesPointer[i].GetDefeatState())
+          //           {
+          //                fireball = NULL;
+          //                delete fireball;
+          //                player.DeleteFireball();
+          //           }
+          //      }
+          //      if(!enemiesPointer[i].GetGroundState() && !enemiesPointer[i].GetDefeatState())
+          //      {
+          //           detectedEnemyGnd = enemiesPointer[i].DetectGround(&platforms[0], 
+          //                                              numberOfPlatforms,
+          //                                              background[0].GetY() + (ViewingWidth/2));
+          //           if(detectedEnemyGnd != -8888)
+          //           {
+          //                enemyGnd = platforms[detectedEnemyGnd].GetY()  - (background[0].GetY() + (ViewingWidth/2));
+          //                gndIsPlat = true;
+          //           }
+          //           else
+          //           {
+          //                gndIsPlat = false;
+          //                enemyGnd = ViewingHeight/2;
+          //           }
+          //           enemiesPointer[i].SetGround(-enemyGnd, gndIsPlat, detectedEnemyGnd);
+          //           enemiesPointer[i].GravityEffect(0,timeDiference);
+          //      }
+          //      // Control animationb
+          //      if (enemiesPointer[i].DetectCollision(&platforms[0], 
+          //                                    numberOfPlatforms, 
+          //                                    background[0].GetY() + (ViewingWidth/2)) || 
+          //                                    enemiesPointer[i].DetectBackground(&background[0], 
+          //                                    1, 
+          //                                    background[0].GetY() + (ViewingWidth/2)) && 
+          //                                    !enemiesPointer[i].GetDefeatState())
+          //      {
+          //           enemiesPointer[i].SetInc(-1);
+          //      }
           
-               if(collisionDetect != 0)
-               {
-                    enemiesPointer[i].MoveInX(inc*enemiesPointer[i].GetHDirection(),timeDiference);
-                    enemiesPointer[i].OnMove(true);
-               }
-               else
-               {
-                   enemiesPointer[i].SetHDirection(-1);; 
-               }
-          }
+          //      if(collisionDetect != 0)
+          //      {
+          //           enemiesPointer[i].MoveInX(inc*enemiesPointer[i].GetInc(),timeDiference);
+          //           enemiesPointer[i].OnMove(true);
+          //      }
+          //      else
+          //      {
+          //          enemiesPointer[i].SetInc(-1);; 
+          //      }
+          // }
           
           glutPostRedisplay();
      }
@@ -1061,6 +1087,7 @@ void mouse(int button, int state, int x, int y)
                player.Atira();
                
                mouseLeft = true;
+               ballZ = player.GetZ();
           }
           
      } 
@@ -1079,35 +1106,53 @@ void mouse(int button, int state, int x, int y)
 }
 void mousePosition(int x, int y)
 {
-     GLfloat fY = ((GLfloat)(Width - y+player.GetY())/Width);
-     mousePosY = 235 + fY*90;
-     player.SetArmAngle(mousePosY);
+     if(keyStatus[(int)('x')])
+     {
+          camXYAngle += x - lastX;
+          camXYAngle = (int)camXYAngle % 360;
+          if (camXZAngle + (y - lastY) < 60 && camXZAngle + (y - lastY) > -60)
+          {
+               camXZAngle += y - lastY;
+               camXZAngle = (int)camXZAngle % 360;      
+          }
+          lastY = y;
+          lastX = x;     
+     }
+     else
+     {
+          GLfloat fY = ((GLfloat)(Width - y+player.GetY())/Width);
+          mousePosY = 235 + fY*90;
+          player.SetArmAngle(mousePosY);
+     }
 }
-void mouse_motion(int x, int y)
-{
-    if (!buttonDown)
-        return;
-    
-    camXZAngle -= x - lastX;
-    camXYAngle += y - lastY;
 
-    lastX = x;
-    lastY = y;
-    glutPostRedisplay();
-}
-void reshape (int w, int h)
+void changeCamera(int angle, int w, int h)
 {
-    //Ajusta o tamanho da tela com a janela de visualizacao
-    glViewport (0, 0, (GLsizei) w, (GLsizei) h);
     glMatrixMode (GL_PROJECTION);
-    glLoadIdentity();
-    if (w <= h)
-        gluPerspective (45, (GLfloat)h/(GLfloat)w, 1, 1000);
-    else
-        gluPerspective (45, (GLfloat)w/(GLfloat)h, 1, 1000);
-    glMatrixMode(GL_MODELVIEW);
-    glutPostRedisplay();
+
+    glLoadIdentity ();
+//      glOrtho(-(ViewingWidth/2),     // X coordinate of left edge             
+//                (ViewingWidth/2),     // X coordinate of right edge            
+//                -(ViewingHeight/2),     // Y coordinate of bottom edge             
+//                (ViewingHeight/2),     // Y coordinate of top edge             
+//                -100,     // Z coordinate of the “near” plane            
+//                100);    // Z coordinate of the “far” plane
+    
+//     gluLookAt(1,2,5, 0,0,0, 0,1,0);
+    gluPerspective (angle, 
+            (GLfloat)w / (GLfloat)h, 1, 150.0);
+
+    glMatrixMode (GL_MODELVIEW);
 }
+
+void reshape (int w, int h) {
+
+    glViewport (0, 0, (GLsizei)w, (GLsizei)h);
+
+    changeCamera(60, w, h);
+}
+
+
 int main(int argc, char *argv[])
 {
     // Initialize openGL with Double buffer and RGB color without transparency.
@@ -1127,7 +1172,7 @@ int main(int argc, char *argv[])
     InitGame(argv[1]);
     // Define callbacks.
     glutDisplayFunc(renderScene);
-//     glutReshapeFunc(reshape);
+    glutReshapeFunc(reshape);
     glutKeyboardFunc(keyPress);
     glutIdleFunc(idle);
     glutKeyboardUpFunc(keyup);
