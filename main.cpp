@@ -5,8 +5,8 @@
 #include <math.h>
 #include <stdio.h>
 #include "player.h"
-// #include "fireball.h"
-// #include "enemy.h"
+#include "fireball.h"
+#include "enemy.h"
 #include "platform.h"
 #include <string>
 #include <cstring>
@@ -536,10 +536,10 @@ void renderScene(void)
   
                     if(fireball) 
                     {
-                         glPushMatrix();
-                         glTranslatef(0,0,ballZ);
+                         // glPushMatrix();
+                         // glTranslatef(0,0,ballZ);
                          fireball->Draw();      
-                         glPopMatrix();
+                         // glPopMatrix();
                     }
           
                     // if(fireballEnemy)

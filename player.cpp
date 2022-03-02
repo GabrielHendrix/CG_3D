@@ -265,9 +265,14 @@ void Player::Jump(GLfloat delta, GLfloat dy, GLdouble deltaTime)
     gThetaJump11 = 0;
 }
 void Player::Rotate(GLfloat angle, GLdouble deltaTime)
-{
+{   
     direction += angle*deltaTime/15;
-}
+
+    if(angle<0 && direction < 0)
+        direction = 360;
+    if(angle>0 && direction > 360)
+        direction = 0;
+}   
 
 
 void Player::Move(GLfloat delta, GLdouble deltaTime)
@@ -280,7 +285,9 @@ void Player::Move(GLfloat delta, GLdouble deltaTime)
     }
     if (delta < 0)
     {
-        hDirection = direction + 180;    
+        hDirection = direction + 180; 
+        if(hDirection > 360)
+            hDirection = (hDirection - 360);   
     }
     dx = cos(degreeToRad(direction)) * delta;
     dz = sin(degreeToRad(direction)) * delta;
@@ -497,7 +504,7 @@ GLint Player::DetectCollision(Platform *platforms, Enemy *enemies, int lenPlatfo
     return 2;
 }
 
-void Player::RotatePoint(GLfloat x, GLfloat y, GLfloat angle, GLfloat &xOut, GLfloat &yOut)
+void Player::RotatePoint(GLfloat x, GLfloat y, GLfloat z, GLfloat angle, GLfloat &xOut, GLfloat &yOut, GLfloat &zOut)
 {
     if (angle < -0.1)
     {
@@ -511,6 +518,7 @@ void Player::RotatePoint(GLfloat x, GLfloat y, GLfloat angle, GLfloat &xOut, GLf
     }
     xOut = x;
     yOut = y;
+    zOut = z;
 }
 
 void Player::DeleteFireball()
@@ -524,11 +532,11 @@ void Player::DeleteFireball()
 
 void Player::Atira()
 {      
-    GLfloat xa, ya, x, y;
+    GLfloat xa, ya, za, x, y;
     Fireball *fireball;
     GLfloat th = armAngle;
    
-    t = fireball;
+    
     fireballOn = true;
     
     if (hDirection >= 180)
@@ -548,8 +556,8 @@ void Player::Atira()
             x = baseWidth;
             y = GetY() + baseHeight;
         }
-        RotatePoint(x, y, armAngle, xa, ya);
-        *fireball = Fireball(xa, ya, armAngle);
+        RotatePoint(x, y, GetZ() + baseWidth, armAngle, xa, ya, za);
+        *fireball = Fireball(xa, ya, za, armAngle);
     }
     else
     {
@@ -568,17 +576,18 @@ void Player::Atira()
             x = 0;
             y = GetY() + baseHeight;
         }
-        RotatePoint(x, y, -armAngle, xa, ya);
-        *fireball = Fireball(xa, ya, -armAngle);
+        RotatePoint(x, y, GetZ() + baseWidth, -armAngle, xa, ya, za);
+        *fireball = Fireball(xa, ya, za, -armAngle);
     } 
+    t = fireball;
 }
 
 bool Player::Atingido(Fireball *fireball, GLfloat pos)
 {
-    GLfloat x, y;
+    GLfloat x, y, z;
     if (fireball)
     {
-        fireball->GetPos(x,y);
+        fireball->GetPos(x,y,z);
 
         if(abs(sqrt(pow(gX - (-x + pos), 2))) < baseWidth &&
            abs(sqrt(pow(gY - (y), 2))) < (baseHeight*1.5))

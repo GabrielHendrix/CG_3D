@@ -16,11 +16,11 @@ void Fireball::DrawCircle(GLint radius, GLfloat R, GLfloat G, GLfloat B)
     glEnd();
 }
 
-void Fireball::DrawFireball(GLfloat x, GLfloat y)
+void Fireball::DrawFireball(GLfloat x, GLfloat y, GLfloat z)
 {
-    GetPos(x,y);
-    // glPushMatrix();
-    glTranslatef(-x, y, 0);
+    GetPos(x,y,z);
+    glPushMatrix();
+    glTranslatef(-x, y, z);
     GLfloat materialEmission[] = { 0.00, 0.00, 0.00, 1.0};
 	GLfloat materialColor[] = { 1.0, 0.0, 0.0, 1.0};
 	GLfloat mat_specular[] = { 1.0, 1.0, 1.0, 1.0};
@@ -32,7 +32,7 @@ void Fireball::DrawFireball(GLfloat x, GLfloat y)
 	glMaterialfv(GL_FRONT, GL_SHININESS, mat_shininess);
     glColor3f(255, 0, 0);
     glutSolidSphere(radiusFireball, 50,50);
-    // glPopMatrix();
+    glPopMatrix();
 }
 
 bool Fireball::DetectBackground(Platform *platforms, int len, GLfloat gXpos, GLfloat pos)
@@ -65,13 +65,13 @@ void Fireball::Move(GLfloat deltaTime)
 {
     if (gDirectionAng < -0.1)
     {
-        gX = gX - abs(sin((abs(gDirectionAng)*M_PI)/180) * gVel * deltaTime);
-        gY = gY - (- cos((gDirectionAng*M_PI)/180) * gVel * deltaTime);
+        gX = gX - abs(sin((abs(gDirectionAng)*M_PI)/180) * 0.1 * deltaTime);
+        gY = gY - (- cos((gDirectionAng*M_PI)/180) * 0.1 * deltaTime);
     }
     if (gDirectionAng > 0.1)
     {
-        gX = gX + abs(sin((abs(gDirectionAng)*M_PI)/180) * gVel * deltaTime);
-        gY = gY - (- cos((abs(gDirectionAng)*M_PI)/180) * gVel * deltaTime);
+        gX = gX + abs(sin((abs(gDirectionAng)*M_PI)/180) * 0.1 * deltaTime);
+        gY = gY - (- cos((abs(gDirectionAng)*M_PI)/180) * 0.1 * deltaTime);
     }
 }
 

@@ -114,7 +114,7 @@ class Player {
         void OnMove(bool is_on_move);
         void OnJump(bool is_on_jump);
         void Aiming(bool is_aiming);
-        void RotatePoint(GLfloat x, GLfloat y, GLfloat angle, GLfloat &xOut, GLfloat &yOut);
+        void RotatePoint(GLfloat x, GLfloat y, GLfloat z, GLfloat angle, GLfloat &xOut, GLfloat &yOut, GLfloat &zOut);
         bool GravityEffect(GLfloat dx, GLdouble deltaTime);
         GLint DetectGround(Platform *platforms, Enemy *enemies, int lenPlatforms, int lenEnemies, GLfloat pos);
         GLint DetectCollision(Platform *element, Enemy *enemies, int lenPlatforms, int lenEnemies, GLfloat pos);
