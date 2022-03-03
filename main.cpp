@@ -16,10 +16,6 @@
 using boost::property_tree::ptree;
 #include <boost/property_tree/xml_parser.hpp>
 #include <boost/foreach.hpp>
-
-using namespace std;
-
-
 using namespace std; 
 std::string XML_PATH1;
 #define INC_KEY 1
@@ -418,65 +414,65 @@ void PrintLife(GLfloat x, GLfloat y)
           tmpStr++;
      }
 }
-//Funcao auxiliar para normalizar um vetor a/|a|
-void normalize(float a[3])
-{
-    double norm = sqrt(a[0]*a[0]+a[1]*a[1]+a[2]*a[2]); 
-    a[0] /= norm;
-    a[1] /= norm;
-    a[2] /= norm;
-}
+// //Funcao auxiliar para normalizar um vetor a/|a|
+// void normalize(float a[3])
+// {
+//     double norm = sqrt(a[0]*a[0]+a[1]*a[1]+a[2]*a[2]); 
+//     a[0] /= norm;
+//     a[1] /= norm;
+//     a[2] /= norm;
+// }
 
-//Funcao auxiliar para fazer o produto vetorial entre dois vetores a x b = out
-void cross(float a[3], float b[3], float out[3])
-{
-    out[0] = a[1]*b[2] - a[2]*b[1];
-    out[1] = a[2]*b[0] - a[0]*b[2];
-    out[2] = a[0]*b[1] - a[1]*b[0];
-}
+// //Funcao auxiliar para fazer o produto vetorial entre dois vetores a x b = out
+// void cross(float a[3], float b[3], float out[3])
+// {
+//     out[0] = a[1]*b[2] - a[2]*b[1];
+//     out[1] = a[2]*b[0] - a[0]*b[2];
+//     out[2] = a[0]*b[1] - a[1]*b[0];
+// }
 
-double degToRad(int degree)
-{
-	return (degree * M_PI)/180;
-}
+// double degToRad(int degree)
+// {
+// 	return (degree * M_PI)/180;
+// }
 
-void MygluLookAt(
-        GLdouble eyex, GLdouble eyey, GLdouble eyez, 
-        GLdouble centerx, GLdouble centery, GLdouble centerz, 
-        GLdouble upx, GLdouble upy, GLdouble upz)
-{
-    // float forward[3], side[3], up[3];
-    //column-major order
-    GLfloat m[4][4] = { 1,0,0,0,
-                        0,1,0,0,
-                        0,0,1,0,
-                        0,0,0,1};
+// void MygluLookAt(
+//         GLdouble eyex, GLdouble eyey, GLdouble eyez, 
+//         GLdouble centerx, GLdouble centery, GLdouble centerz, 
+//         GLdouble upx, GLdouble upy, GLdouble upz)
+// {
+//     // float forward[3], side[3], up[3];
+//     //column-major order
+//     GLfloat m[4][4] = { 1,0,0,0,
+//                         0,1,0,0,
+//                         0,0,1,0,
+//                         0,0,0,1};
 
-	//COLOQUE SEU CODIGO AQUI
-    GLfloat forward[3]{(GLfloat)eyex, (GLfloat)eyey, (GLfloat)eyez}, side[3], up[3]{(GLfloat)upx, (GLfloat)upy, (GLfloat)upz};
+// 	//COLOQUE SEU CODIGO AQUI
+//     GLfloat forward[3]{(GLfloat)eyex, (GLfloat)eyey, (GLfloat)eyez}, side[3], up[3]{(GLfloat)upx, (GLfloat)upy, (GLfloat)upz};
 
 
-	normalize(forward);		
-	m[0][2] = forward[0],
-	m[1][2] = forward[1],
-	m[2][2] = forward[2];
+// 	normalize(forward);		
+// 	m[0][2] = forward[0],
+// 	m[1][2] = forward[1],
+// 	m[2][2] = forward[2];
 
-	cross(up, forward, side);
-	normalize(side);
-    m[0][0] = side[0],
-	m[1][0] = side[1],
-	m[2][0] = side[2];
-    cross(forward,side,up);
-    normalize(up);
-    m[0][1] = up[0],
-	m[1][1] = up[1],
-	m[2][1] = up[2];
+// 	cross(up, forward, side);
+// 	normalize(side);
+//     m[0][0] = side[0],
+// 	m[1][0] = side[1],
+// 	m[2][0] = side[2];
+//     cross(forward,side,up);
+//     normalize(up);
+//     m[0][1] = up[0],
+// 	m[1][1] = up[1],
+// 	m[2][1] = up[2];
 
-	//COLOQUE SEU CODIGO AQUI
-    glMultMatrixf(&m[0][0]);
-    glTranslatef(-eyex, -eyey, -eyez);
+// 	//COLOQUE SEU CODIGO AQUI
+//     glMultMatrixf(&m[0][0]);
+//     glTranslatef(-eyex, -eyey, -eyez);
 
-}
+// }
 
 void renderScene(void)
 {
@@ -486,6 +482,8 @@ void renderScene(void)
                return;
           }
           glMatrixMode(GL_MODELVIEW); // Select the projection matrix    
+          // glPushMatrix();
+          // glTranslatef(0,0,0);
           glLoadIdentity();
           glClearColor (0.30, 0.30, 1.0, 0.0);
           // glClearColor (0.0,0.0,0.0,1.0);
@@ -534,13 +532,6 @@ void renderScene(void)
                     background[0].Draw();
                     glPopMatrix();
   
-                    if(fireball) 
-                    {
-                         // glPushMatrix();
-                         // glTranslatef(0,0,ballZ);
-                         fireball->Draw();      
-                         // glPopMatrix();
-                    }
           
                     // if(fireballEnemy)
                     // {
@@ -559,7 +550,25 @@ void renderScene(void)
                          platforms[j].Draw();
                          glPopMatrix();
                     }
-                    drawPlayer();
+                    // glPushMatrix();
+                    //      glTranslatef(0, 0, 0);
+                    if(fireball) 
+                    {
+                         glPushMatrix();
+                              glRotatef(90, 0, 1, 0);
+                              // glRotatef(player.GetHDirection(), 0, 1, 0);
+                              fireball->Draw();      
+                         glPopMatrix();
+                    }
+                    // glPopMatrix();
+                    glPushMatrix();
+                         glTranslatef(0, player.GetY(), player.GetZ());
+                         glScalef(player.GetBaseHeight(), player.GetBaseHeight(), player.GetBaseHeight());
+                         glRotatef(90, 0, 1, 0);
+                         glRotatef(player.GetHDirection(), 0, 1, 0);
+                         
+                         drawPlayer();
+                    glPopMatrix();
                     // for (int i = 0; i < 1; i++)
                     // {  
                     //      if(!enemiesPointer[i].GetDefeatState())
@@ -582,11 +591,12 @@ void renderScene(void)
                     // glEnable(GL_CULL_FACE); 
                }
                glutSwapBuffers(); // Desenha the new frame of the game.
-     }
-     else
-     {
-          Restart();
-     }
+          }
+          else
+          {
+               Restart();
+          }
+          // glPopMatrix();
 }
 
 void keyPress(unsigned char key, int x, int y)
@@ -980,20 +990,20 @@ void idle(void)
           }
           if(fireball)
           {    
-               fireball->Move(timeDiference);
+               // fireball->Move(timeDiference);
           
-               if (fireball->DetectBulletCollision(&platforms[0], 
-               numberOfPlatforms, player.GetX(), 
-               background[0].GetY() + (ViewingWidth/2)) ||
-               fireball->DetectBackground(&background[0], 
-               numberOfPlatforms, player.GetX(), 
-               background[0].GetY() + (ViewingWidth/2)) || 
-               (fireball->GetDeltaDist() > ViewingWidth/2))
-               { 
-                    fireball = NULL;
-                    delete fireball;
-                    player.DeleteFireball();
-               }
+               // if (fireball->DetectBulletCollision(&platforms[0], 
+               // numberOfPlatforms, player.GetX(), 
+               // background[0].GetY() + (ViewingWidth/2)) ||
+               // fireball->DetectBackground(&background[0], 
+               // numberOfPlatforms, player.GetX(), 
+               // background[0].GetY() + (ViewingWidth/2)) || 
+               // (fireball->GetDeltaDist() > ViewingWidth/2))
+               // { 
+               //      fireball = NULL;
+               //      delete fireball;
+               //      player.DeleteFireball();
+               // }
           
           }
 

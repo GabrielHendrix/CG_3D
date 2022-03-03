@@ -9,6 +9,7 @@
 #include <string.h>
 #include "imageloader.h"
 
+using namespace std;
 //Aponta para uma das Player de movimento e coloca na primeira frame
 void Player::drawInit(int movID){
     currentMovID = movID;
@@ -26,8 +27,8 @@ bool Player::drawNext(){
 
 //Carrega as Player de um movimento do caminho path e assumindo qtd arquivos
 int Player::loadMeshAnim(string path, int qtd){
-    vector<mesh> vec;
-    mesh m;
+    vector<Player> vec;
+    Player m;
     this->vecMeshes.push_back(vec);
     int movID = this->vecMeshes.size()-1;
     char str[7];
@@ -44,11 +45,11 @@ int Player::loadMeshAnim(string path, int qtd){
 
 //Desenha uma mesh com a respectiva textura
 void Player::draw(int movID, int frameId){
-    glPushMatrix();
-    glTranslatef(0, gY, gZ);
-    glScalef(baseHeight, baseHeight, baseHeight);
-    glRotatef(90, 0, 1, 0);
-    glRotatef(hDirection, 0, 1, 0);
+    // glPushMatrix();
+    // glTranslatef(0, gY, gZ);
+    // glScalef(baseHeight, baseHeight, baseHeight);
+    // glRotatef(90, 0, 1, 0);
+    // glRotatef(hDirection, 0, 1, 0);
     if (this->texID != -1){
         glEnable(GL_TEXTURE_2D);
         glBindTexture (GL_TEXTURE_2D, this->texID);
@@ -57,7 +58,7 @@ void Player::draw(int movID, int frameId){
     if (this->texID != -1){
         glDisable(GL_TEXTURE_2D);
     }
-    glPopMatrix();
+    // glPopMatrix();
 }
 
 //Le a textura
@@ -87,7 +88,7 @@ bool Player::loadTexture(string path){
 }
 
 //função para carregar o OBJ
-bool mesh::loadMesh(string path){
+bool Player::loadMesh(string path){
     vector<int> vertIndex, uvIndex, normIndex;//indexadores para vertices, mapeamento de textura e normais
     vertsPos.clear();
     vertsNorm.clear();
@@ -146,6 +147,8 @@ bool mesh::loadMesh(string path){
         }
         for(unsigned int i=0; i<vertIndex.size(); i++){
             verticeStrip vert;
+            // printf("vertsPos %d\n", vertIndex[i]-1);
+            
             vert.vPos.x = vertsPos[vertIndex[i]-1].x;
             vert.vPos.y = vertsPos[vertIndex[i]-1].y;
             vert.vPos.z = vertsPos[vertIndex[i]-1].z;
@@ -161,7 +164,7 @@ bool mesh::loadMesh(string path){
 }
 
 //desenha a malha
-void mesh::draw(){
+void Player::draw(){
     int cont=0;
     GLfloat materialEmission[] = { 0.10, 0.10, 0.10, 1};
     GLfloat materialColorA[] = { 0.1, 0.1, 0.1, 0.1};
@@ -531,54 +534,82 @@ void Player::DeleteFireball()
 }
 
 void Player::Atira()
-{      
-    GLfloat xa, ya, za, x, y;
+{   
+    
+    GLfloat xa, ya, za, x, y, z;
     Fireball *fireball;
     GLfloat th = armAngle;
-   
-    
+
     fireballOn = true;
     
-    if (hDirection >= 180)
-    {
-        if(on_move == false && !on_jump)
-        {
-            x = baseWidth;
-            y = GetY() + baseHeight;
-        }
-        else if (on_move && !on_jump)
-        {
-            x = 0;
-            y = GetY() + baseHeight;
-        }
-        else if (on_jump)
-        {
-            x = baseWidth;
-            y = GetY() + baseHeight;
-        }
-        RotatePoint(x, y, GetZ() + baseWidth, armAngle, xa, ya, za);
-        *fireball = Fireball(xa, ya, za, armAngle);
-    }
-    else
-    {
-        if(on_move == false && !on_jump)
-        {
-            x = baseWidth;
-            y = GetY() + baseHeight;
-        }
-        else if (on_move && !on_jump)
-        {
-            x = baseHeight;
-            y = GetY() + baseHeight;
-        }
-        else if (on_jump)
-        {
-            x = 0;
-            y = GetY() + baseHeight;
-        }
-        RotatePoint(x, y, GetZ() + baseWidth, -armAngle, xa, ya, za);
-        *fireball = Fireball(xa, ya, za, -armAngle);
-    } 
+    // if (hDirection >= 180)
+    // {
+    //     if(on_move == false && !on_jump)
+    //     {
+    //         x = baseWidth;
+    //         y = GetY() + baseHeight;
+    //     }
+    //     else if (on_move && !on_jump)
+    //     {
+    //         x = 0;
+    //         y = GetY() + baseHeight;
+    //     }
+    //     else if (on_jump)
+    //     {
+    //         x = baseWidth;
+    //         y = GetY() + baseHeight;
+    //     }
+    //     RotatePoint(x, y, GetZ() + baseWidth, armAngle, xa, ya, za);
+    //     // fireball = new Fireball(&xa, &ya, &za, armAngle);
+    //     fireball = new Fireball(xa, xa, xa, 
+    //                             ya, ya, ya, 
+    //                             za, za, za, 
+    //                             -armAngle);
+    //     // fireball->SetY(&ya, (int)2);
+    // }
+    // else
+    // {
+    //     if(on_move == false && !on_jump)
+    //     {
+    //         x = baseWidth;
+    //         y = GetY() + baseHeight;
+    //     }
+    //     else if (on_move && !on_jump)            
+    //     {
+    //         x = baseHeight;
+    //         y = GetY() + baseHeight;
+    //     }
+    //     else if (on_jump)
+    //     {
+    //         x = 0;
+    //         y = GetY() + baseHeight;
+    //     }
+        
+    //     RotatePoint(x, y, GetZ() + baseWidth, -armAngle, xa, ya, za);
+    //     fireball = new Fireball(xa, xa, xa, 
+    //                             ya, ya, ya, 
+    //                             za, za, za, 
+    //                             -armAngle);
+    //     // fireball = new Fireball(&xa, &ya, &za, -armAngle);
+    //     // fireball->SetY(&ya, (int)2);
+    // }
+     
+    printf("vertsPos[16994].x %f\n",            (GetBaseHeight() * this->vecMeshes[currentMovID][currentFrame].vertsPos[16994].x));
+    printf("vertsPos[16994].y %f\n",   GetY() + (GetBaseHeight() * this->vecMeshes[currentMovID][currentFrame].vertsPos[16994].y));
+    printf("vertsPos[16994].z %f\n\n", GetZ() + (GetBaseHeight() * this->vecMeshes[currentMovID][currentFrame].vertsPos[16994].z));
+    printf("gx: %f\n", GetX());
+    printf("gy: %f\n", GetY());
+    printf("gz: %f\n", GetZ());
+    fireball = new Fireball(GetX() + (GetBaseHeight() * this->vecMeshes[currentMovID][currentFrame].vertsPos[14781].x), 
+                            GetY() + (GetBaseHeight() * this->vecMeshes[currentMovID][currentFrame].vertsPos[14781].y), 
+                            GetZ() + (GetBaseHeight() * this->vecMeshes[currentMovID][currentFrame].vertsPos[14781].z), 
+                                     (GetBaseHeight() * this->vecMeshes[currentMovID][currentFrame].vertsPos[16994].x), 
+                            GetY() + (GetBaseHeight() * this->vecMeshes[currentMovID][currentFrame].vertsPos[16994].y), 
+                            GetZ() + (GetBaseHeight() * this->vecMeshes[currentMovID][currentFrame].vertsPos[16994].z), 
+                            GetX() + (GetBaseHeight() * this->vecMeshes[currentMovID][currentFrame].vertsPos[14864].x), 
+                            GetY() + (GetBaseHeight() * this->vecMeshes[currentMovID][currentFrame].vertsPos[14864].y), 
+                            GetZ() + (GetBaseHeight() * this->vecMeshes[currentMovID][currentFrame].vertsPos[14864].z), 
+                            -armAngle);
     t = fireball;
 }
 

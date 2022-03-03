@@ -33,20 +33,6 @@ typedef struct VERTICE_STRIP{
     tex vTex;
 } verticeStrip;
 
-class mesh{
-	
-    public:
-    vector<pos> vertsPos; //Lista de posicao dos vertices (original do OBJ)   
-    vector<norm> vertsNorm; //Lista de normais dos vertices (original do OBJ)   
-    vector<tex> vertsTex; //Lista de coor de textura dos vertices (original do OBJ)   
-    vector<verticeStrip> vertsS;//Lista ordenada de vertices das faces para o desenho do modelo via trangle strip
-    mesh(){
-    };
-    bool loadMesh(string path);//Path é o caminho para o arquivo .obj e deve conter o nome do arquivo.obj
-    void draw();
-};
-
-
 class Player {
     GLint hDirection;
     GLfloat gX, gY, gZ, radius, gTheta0, gTheta1, gTheta01, gTheta11, gThetaWheel, armAngle, time; 
@@ -56,12 +42,16 @@ class Player {
     bool on_move, on_jump, aiming, fireballOn, defeat, colliderState;
 
     public:
+        vector<pos> vertsPos; //Lista de posicao dos vertices (original do OBJ)   
+        vector<norm> vertsNorm; //Lista de normais dos vertices (original do OBJ)   
+        vector<tex> vertsTex; //Lista de coor de textura dos vertices (original do OBJ)   
+        vector<verticeStrip> vertsS;//Lista ordenada de vertices das faces para o desenho do modelo via trangle strip
         GLuint texID;
         char* texPixels;
         int texWidth;
         int texHeight;
         //Variaveis das meshes dos movimentos
-        vector<vector<mesh>> vecMeshes;
+        vector<vector<Player>> vecMeshes;
         int currentMovID;
         int currentFrame;
         Player(){
@@ -123,6 +113,8 @@ class Player {
         bool Atingido(Fireball *fireball, GLfloat pos);
         void Atira();
         void DeleteFireball();
+        bool loadMesh(string path);//Path é o caminho para o arquivo .obj e deve conter o nome do arquivo.obj
+        void draw();
         GLfloat GetX(){
             return gX;
         };
@@ -138,8 +130,17 @@ class Player {
         Fireball* GetFireball(){
             return t;
         };
+        // void SetFireball(*fireball){
+        //     t = fireball[0];
+        // };
         GLfloat GetLegHeight(){
             return legHeight;
+        };
+        GLfloat GetBaseWidth(){
+            return baseWidth;
+        };
+        GLfloat GetBaseHeight(){
+            return baseHeight;
         };
         GLfloat GetPlayerCamHeight(){
             return legHeight*2 + baseHeight;
