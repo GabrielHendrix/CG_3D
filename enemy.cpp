@@ -465,19 +465,26 @@ void Enemy::Atira()
 }
 bool Enemy::Atingido(Fireball *fireball, GLfloat pos)
 {
-    // GLfloat x, y;
-    // if (fireball)
-    // {
-    //     fireball->GetPos(x,y);
-
-    //     if(abs(sqrt(pow(gX - (-x + pos), 2))) < baseWidth &&
-    //        abs(sqrt(pow(gY - (y), 2))) < (baseHeight*1.5))
-    //     {
+    GLfloat x, y, z;
+    if (fireball)
+    {
+        fireball->GetPos(x,y,z);
+        printf("BallX: %f\n", x);
+        printf("BallY: %f\n", y);
+        printf("BallZ: %f\n\n", z);
+        
+        printf("gX: %f\n",   gX);
+        printf("gY: %f\n",   gY);
+        printf("gZ: %f\n\n", gZ);
+        if(abs(sqrt(pow(gX - (x), 2))) < baseWidth &&
+           abs(sqrt(pow(gY - (y), 2))) < (baseHeight*1.5) &&
+           abs(sqrt(pow(gZ - (z), 2))) < baseWidth)
+        {
             
-    //         defeat = true;
-    //         return true;
-    //     }
-    //     return false;
-    // }  
+            defeat = true;
+            return true;
+        }
+        return false;
+    }  
     return false;     
 }

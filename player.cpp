@@ -275,6 +275,7 @@ void Player::Rotate(GLfloat angle, GLdouble deltaTime)
         direction = 360;
     if(angle>0 && direction > 360)
         direction = 0;
+    hDirection = direction;
 }   
 
 
@@ -296,7 +297,7 @@ void Player::Move(GLfloat delta, GLdouble deltaTime)
     dz = sin(degreeToRad(direction)) * delta;
 
     gX += dx*percentual*deltaTime/15;
-    gZ -= dz*percentual*deltaTime/15;    
+    gZ += dz*percentual*deltaTime/15;    
     
     if(ground < gY-legHeight)
         gY = gY-legHeight;
@@ -594,22 +595,50 @@ void Player::Atira()
     //     // fireball->SetY(&ya, (int)2);
     // }
      
-    printf("vertsPos[16994].x %f\n",            (GetBaseHeight() * this->vecMeshes[currentMovID][currentFrame].vertsPos[16994].x));
-    printf("vertsPos[16994].y %f\n",   GetY() + (GetBaseHeight() * this->vecMeshes[currentMovID][currentFrame].vertsPos[16994].y));
-    printf("vertsPos[16994].z %f\n\n", GetZ() + (GetBaseHeight() * this->vecMeshes[currentMovID][currentFrame].vertsPos[16994].z));
+    // printf("vertsPos[16994].x %f\n",            (GetBaseHeight() * this->vecMeshes[currentMovID][currentFrame].vertsPos[16994].x));
+    // printf("vertsPos[16994].y %f\n",   GetY() + (GetBaseHeight() * this->vecMeshes[currentMovID][currentFrame].vertsPos[16994].y));
+    // printf("vertsPos[16994].z %f\n\n", GetZ() + (GetBaseHeight() * this->vecMeshes[currentMovID][currentFrame].vertsPos[16994].z));
+    // glPushMatrix();
+    // glTranslatef(0, 0, 0);
+    //     printf("Inside push and pop\ngx: %f\n", GetX());
+    //     printf("gy: %f\n", GetY());
+    //     printf("gz: %f\n\n", GetZ());
+    // glPopMatrix();
+
+
     printf("gx: %f\n", GetX());
     printf("gy: %f\n", GetY());
     printf("gz: %f\n", GetZ());
-    fireball = new Fireball(GetX() + (GetBaseHeight() * this->vecMeshes[currentMovID][currentFrame].vertsPos[14781].x), 
-                            GetY() + (GetBaseHeight() * this->vecMeshes[currentMovID][currentFrame].vertsPos[14781].y), 
-                            GetZ() + (GetBaseHeight() * this->vecMeshes[currentMovID][currentFrame].vertsPos[14781].z), 
-                                     (GetBaseHeight() * this->vecMeshes[currentMovID][currentFrame].vertsPos[16994].x), 
-                            GetY() + (GetBaseHeight() * this->vecMeshes[currentMovID][currentFrame].vertsPos[16994].y), 
-                            GetZ() + (GetBaseHeight() * this->vecMeshes[currentMovID][currentFrame].vertsPos[16994].z), 
-                            GetX() + (GetBaseHeight() * this->vecMeshes[currentMovID][currentFrame].vertsPos[14864].x), 
-                            GetY() + (GetBaseHeight() * this->vecMeshes[currentMovID][currentFrame].vertsPos[14864].y), 
-                            GetZ() + (GetBaseHeight() * this->vecMeshes[currentMovID][currentFrame].vertsPos[14864].z), 
-                            -armAngle);
+    // fireball = new Fireball(         (GetBaseHeight() * this->vecMeshes[currentMovID][currentFrame].vertsPos[7983].x), 
+    //                         GetY() + (GetBaseHeight() * this->vecMeshes[currentMovID][currentFrame].vertsPos[7983].y), 
+    //                         GetZ() + (GetBaseHeight() * this->vecMeshes[currentMovID][currentFrame].vertsPos[7983].z), 
+    //                                  (GetBaseHeight() * this->vecMeshes[currentMovID][currentFrame].vertsPos[7982].x), 
+    //                         GetY() + (GetBaseHeight() * this->vecMeshes[currentMovID][currentFrame].vertsPos[7982].y), 
+    //                         GetZ() + (GetBaseHeight() * this->vecMeshes[currentMovID][currentFrame].vertsPos[7982].z), 
+    //                                  (GetBaseHeight() * this->vecMeshes[currentMovID][currentFrame].vertsPos[7984].x), 
+    //                         GetY() + (GetBaseHeight() * this->vecMeshes[currentMovID][currentFrame].vertsPos[7984].y), 
+    //                         GetZ() + (GetBaseHeight() * this->vecMeshes[currentMovID][currentFrame].vertsPos[7984].z), 
+    //                         GetHDirection(), armAngle);
+    // fireball = new Fireball(         (GetBaseHeight() * this->vecMeshes[currentMovID][currentFrame].vertsPos[17325].x), 
+    //                         GetY() + (GetBaseHeight() * this->vecMeshes[currentMovID][currentFrame].vertsPos[17325].y), 
+    //                         GetZ() + (GetBaseHeight() * this->vecMeshes[currentMovID][currentFrame].vertsPos[17325].z), 
+    //                                  (GetBaseHeight() * this->vecMeshes[currentMovID][currentFrame].vertsPos[17324].x), 
+    //                         GetY() + (GetBaseHeight() * this->vecMeshes[currentMovID][currentFrame].vertsPos[17324].y), 
+    //                         GetZ() + (GetBaseHeight() * this->vecMeshes[currentMovID][currentFrame].vertsPos[17324].z), 
+    //                                  (GetBaseHeight() * this->vecMeshes[currentMovID][currentFrame].vertsPos[17328].x), 
+    //                         GetY() + (GetBaseHeight() * this->vecMeshes[currentMovID][currentFrame].vertsPos[17328].y), 
+    //                         GetZ() + (GetBaseHeight() * this->vecMeshes[currentMovID][currentFrame].vertsPos[17328].z), 
+    //                         GetHDirection(), armAngle, GetY(), GetZ());
+    fireball = new Fireball((GetBaseHeight() * GetPosArmX()), 
+                            (GetBaseHeight() * GetPosArmY()), 
+                            (GetBaseHeight() * GetPosArmZ()), 
+                            (GetBaseHeight() * this->vecMeshes[currentMovID][currentFrame].vertsPos[13704].x), 
+                            (GetBaseHeight() * this->vecMeshes[currentMovID][currentFrame].vertsPos[13704].y), 
+                            (GetBaseHeight() * this->vecMeshes[currentMovID][currentFrame].vertsPos[13704].z), 
+                            (GetBaseHeight() * GetPosArmX()), 
+                            (GetBaseHeight() * GetPosArmY()), 
+                            (GetBaseHeight() * GetPosArmZ()), 
+                            GetHDirection(), armAngle, GetX(), GetY(), GetZ());
     t = fireball;
 }
 

@@ -35,7 +35,7 @@ typedef struct VERTICE_STRIP{
 
 class Player {
     GLint hDirection;
-    GLfloat gX, gY, gZ, radius, gTheta0, gTheta1, gTheta01, gTheta11, gThetaWheel, armAngle, time; 
+    GLfloat gX, gY, gZ, radius, gTheta0, gTheta1, gTheta01, gTheta11, gThetaWheel, armAngle, time, posArmX, posArmY, posArmZ; 
     GLfloat direction, inc0, inc1, inc01, inc11, gThetaJump0, gThetaJump1, gThetaJump01, radiusWheel, ground;
     GLfloat gThetaJump11, percentual, legHeight, memberWidth, paddleHeight, paddleWidth, baseHeight, baseWidth;
     Fireball* t;
@@ -57,7 +57,10 @@ class Player {
         Player(){
             gX = -1; 
             gY = -50;
-            gZ = 0; 
+            gZ = 0;
+            posArmX = 0;
+            posArmY = 0;
+            posArmZ = 0; 
             t = NULL;
             fireballOn = false;
             gTheta0 = -135; 
@@ -142,6 +145,9 @@ class Player {
         GLfloat GetBaseHeight(){
             return baseHeight;
         };
+        GLfloat GetArmAngle(){
+            return armAngle;
+        }
         GLfloat GetPlayerCamHeight(){
             return legHeight*2 + baseHeight;
         };
@@ -159,6 +165,20 @@ class Player {
         };
         void SetZ(GLfloat z){
             gZ = z;
+        };
+        void SetPosArm(GLfloat x, GLfloat y, GLfloat z){
+            posArmX = x;
+            posArmY = y;
+            posArmZ = z;
+        };
+        GLfloat GetPosArmX(){
+            return posArmX;
+        };
+        GLfloat GetPosArmY(){
+            return posArmY;
+        };
+        GLfloat GetPosArmZ(){
+            return posArmZ;
         };
         void SetRadius(GLfloat r){
             radius = r;

@@ -8,6 +8,7 @@
 #include "fireball.h"
 #include "enemy.h"
 #include "platform.h"
+#include "objloader.h"
 #include <string>
 #include <cstring>
 #include <iostream>
@@ -41,7 +42,7 @@ double camXYAngle;
 double camXZAngle;
 int lastX;
 int lastY;
-GLfloat ballZ;
+GLfloat ballZ, ballY;
 int vet[9999]; 
 static char str[1000];
 void * font = GLUT_BITMAP_9_BY_15;
@@ -53,17 +54,20 @@ int aux2, incJump, atingido, incAir, incAirControl, numberOfEnemies, numberOfPla
 Enemy* enemiesPointer;
 GLint collisionDetect, aux, bgDetect, damage, ind, ViewingWidth, ViewingHeight, ground;
 GLfloat shootAngle, previousGround, newGround, jumpSize, deltaX, mousePosY, detectedEnemyGnd, enemyGnd;
-
+mesh playerArm;
 
 //ID das meshes lidas
 int movIdle = -1;
+int movIdleFire = -1;
+int movRunFire = -1;
 int movRunEnemy[9999];
 int movPunch = -1;
 int movRun = -1;
 int movDance = -1;
-
 //Controles dos golpes
 int running = 0;
+int fire = 0;
+int firing = 0;
 int punching = 0;
 int dancing = 0;
 int acting = 0;
@@ -76,11 +80,19 @@ void drawPlayer(){
      // glMatrixMode(GL_MODELVIEW);
      
      //Escolhe entre iniciar o desenho do chute ou soco
-     if (running && !acting){
+     if (!fire && running && !acting){
           player.drawInit(movRun);
           acting = 1;
      }
-     else if(!running && acting){
+     else if (fire && running && !acting){
+          player.drawInit(movRunFire);
+          acting = 1;
+     }
+     else if(!running && fire && !acting){
+          player.drawInit(movIdleFire);
+          acting = 1;
+     }
+     else if(!fire && !running && acting){
           player.drawInit(movIdle);
           acting = 0;
      }
@@ -100,11 +112,23 @@ void drawPlayer(){
      int rtn = player.drawNext();
      //Reinicia com o movimento de parado esperando a luta
      if (rtn){
-          player.drawInit(movIdle);
+          if(fire && !running){
+               player.drawInit(movIdleFire);
+          }
+          else if(fire && running){
+               player.drawInit(movRunFire);
+          }
+          else if(!fire && running){
+               player.drawInit(movRun);
+          }
+          else{
+               player.drawInit(movIdle);
+          }
           acting = 0;
           punching = 0;
           running = 0;
           dancing = 0;
+          fire = 0;
      }
 }
 
@@ -414,27 +438,27 @@ void PrintLife(GLfloat x, GLfloat y)
           tmpStr++;
      }
 }
-// //Funcao auxiliar para normalizar um vetor a/|a|
-// void normalize(float a[3])
-// {
-//     double norm = sqrt(a[0]*a[0]+a[1]*a[1]+a[2]*a[2]); 
-//     a[0] /= norm;
-//     a[1] /= norm;
-//     a[2] /= norm;
-// }
+//Funcao auxiliar para normalizar um vetor a/|a|
+void normalize(float a[3])
+{
+    double norm = sqrt(a[0]*a[0]+a[1]*a[1]+a[2]*a[2]); 
+    a[0] /= norm;
+    a[1] /= norm;
+    a[2] /= norm;
+}
 
-// //Funcao auxiliar para fazer o produto vetorial entre dois vetores a x b = out
-// void cross(float a[3], float b[3], float out[3])
-// {
-//     out[0] = a[1]*b[2] - a[2]*b[1];
-//     out[1] = a[2]*b[0] - a[0]*b[2];
-//     out[2] = a[0]*b[1] - a[1]*b[0];
-// }
+//Funcao auxiliar para fazer o produto vetorial entre dois vetores a x b = out
+void cross(float a[3], float b[3], float out[3])
+{
+    out[0] = a[1]*b[2] - a[2]*b[1];
+    out[1] = a[2]*b[0] - a[0]*b[2];
+    out[2] = a[0]*b[1] - a[1]*b[0];
+}
 
-// double degToRad(int degree)
-// {
-// 	return (degree * M_PI)/180;
-// }
+GLfloat degToRad(int degree)
+{
+	return (degree * M_PI)/180;
+}
 
 // void MygluLookAt(
 //         GLdouble eyex, GLdouble eyey, GLdouble eyez, 
@@ -473,7 +497,47 @@ void PrintLife(GLfloat x, GLfloat y)
 //     glTranslatef(-eyex, -eyey, -eyez);
 
 // }
+void DrawAxes(double size)
+{
+    GLfloat mat_ambient_r[] = { 1.0, 0.0, 0.0, 1.0 };
+    GLfloat mat_ambient_g[] = { 0.0, 1.0, 0.0, 1.0 };
+    GLfloat mat_ambient_b[] = { 0.0, 0.0, 1.0, 1.0 };
+    GLfloat no_mat[] = { 0.0, 0.0, 0.0, 1.0 };
+    glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, 
+            no_mat);
+    glMaterialfv(GL_FRONT, GL_SPECULAR, no_mat);
+    glMaterialfv(GL_FRONT, GL_SHININESS, no_mat);
 
+    //x axis
+    glPushMatrix();
+        glMaterialfv(GL_FRONT, GL_EMISSION, mat_ambient_r);
+        glColor3fv(mat_ambient_r);
+        glScalef(size, size*0.1, size*0.1);
+        glTranslatef(0.5, 0, 0); // put in one end
+        glutSolidCube(1.0);
+    glPopMatrix();
+
+    //y axis
+    glPushMatrix();
+        glMaterialfv(GL_FRONT, GL_EMISSION, mat_ambient_g);
+        glColor3fv(mat_ambient_g);
+        glRotatef(90,0,0,1);
+        glScalef(size, size*0.1, size*0.1);
+        glTranslatef(0.5, 0, 0); // put in one end
+        glutSolidCube(1.0);
+    glPopMatrix();
+
+    //z axis
+    glPushMatrix();
+        glMaterialfv(GL_FRONT, GL_EMISSION, mat_ambient_b);
+        glColor3fv(mat_ambient_b);
+        glRotatef(-90,0,1,0);
+        glScalef(size, size*0.1, size*0.1);
+        glTranslatef(0.5, 0, 0); // put in one end
+        glutSolidCube(1.0);
+    glPopMatrix();
+    
+}
 void renderScene(void)
 {
           if (updateDrawing){
@@ -501,6 +565,7 @@ void renderScene(void)
           gluLookAt(-ViewingHeight/4, 0, 0,//-ViewingHeight/4,
                     ViewingHeight/2, 0, 0,
                     0, 1, 0);
+          
           glRotatef((int)camXZAngle,0,0,1);
           glRotatef((int)camXYAngle,0,1,0);
           glTranslatef(0,-(player.GetY()+player.GetPlayerCamHeight()),-player.GetZ());
@@ -550,35 +615,62 @@ void renderScene(void)
                          platforms[j].Draw();
                          glPopMatrix();
                     }
-                    // glPushMatrix();
-                    //      glTranslatef(0, 0, 0);
+
                     if(fireball) 
                     {
                          glPushMatrix();
-                              glRotatef(90, 0, 1, 0);
-                              // glRotatef(player.GetHDirection(), 0, 1, 0);
-                              fireball->Draw();      
+                              fireball->Draw(); 
+                              DrawAxes(5);    
                          glPopMatrix();
                     }
-                    // glPopMatrix();
+        
                     glPushMatrix();
-                         glTranslatef(0, player.GetY(), player.GetZ());
-                         glScalef(player.GetBaseHeight(), player.GetBaseHeight(), player.GetBaseHeight());
+                         GLfloat mT[4][4] = { 1,0,0,0,
+                                              0,1,0,0,
+                                              0,0,1,0,
+                                              0,0,player.GetZ(),1};
+                         glMultMatrixf(&mT[0][0]);
+
+                         GLfloat m[4][4] = { (GLfloat)cos(degToRad(player.GetHDirection())),0,(GLfloat)sin(degToRad(player.GetHDirection())),0,
+                                            0,1,0,0,
+                                            (GLfloat)-sin(degToRad(player.GetHDirection())),0,(GLfloat)cos(degToRad(player.GetHDirection())),0,
+                                            0, 0, 0, 1};
+                         glMultMatrixf(&m[0][0]);
+                         // glRotatef(player.GetHDirection(), 0, 1, 0);
                          glRotatef(90, 0, 1, 0);
-                         glRotatef(player.GetHDirection(), 0, 1, 0);
+
+                         glTranslatef(0, player.GetY(), 0);
                          
+                         glScalef(player.GetBaseHeight(), player.GetBaseHeight(), player.GetBaseHeight());
+                         // glRotatef(player.GetHDirection(), 0, 1, 0);
                          drawPlayer();
+                         // printf("hDirection: %d\n", player.GetHDirection());
+                         if(firing)
+                         {
+                              player.SetPosArm(playerArm.vertsPos[661].x,
+                                               playerArm.vertsPos[661].y,
+                                               playerArm.vertsPos[661].z);
+                              glTranslatef(player.vecMeshes[player.currentMovID][player.currentFrame].vertsPos[13704].x,
+                                           player.vecMeshes[player.currentMovID][player.currentFrame].vertsPos[13704].y,
+                                           player.vecMeshes[player.currentMovID][player.currentFrame].vertsPos[13704].z);
+                              glRotatef(-90, 0, 1, 0);
+                              glRotatef(player.GetArmAngle()+90, 0, 0, 1);
+                              playerArm.draw();
+                         }
+                             
+                         DrawAxes(2);
                     glPopMatrix();
-                    // for (int i = 0; i < 1; i++)
-                    // {  
-                    //      if(!enemiesPointer[i].GetDefeatState())
-                    //      {
-                    //           glPushMatrix(); 
-                    //           glTranslatef(enemiesPointer[i].GetX() - player.GetX(), enemiesPointer[i].GetY(),0);
-                    //           drawEnemy(i);
-                    //           glPopMatrix();
-                    //      }
-                    // }
+                    for (int i = 0; i < numberOfEnemies; i++)
+                    {  
+                         if(!enemiesPointer[i].GetDefeatState())
+                         {
+                              glPushMatrix(); 
+                              glTranslatef(enemiesPointer[i].GetX() - player.GetX(), enemiesPointer[i].GetY(),-ViewingHeight/4);
+                                   drawEnemy(i);
+                                   enemiesPointer[i].SetZ(-ViewingHeight/4);
+                              glPopMatrix();
+                         }
+                    }
 
                     glDisable(GL_LIGHTING);
                     glDisable(GL_LIGHT0);
@@ -587,16 +679,14 @@ void renderScene(void)
                          PrintScore(5, ViewingHeight/2 - 5);
                     glEnable(GL_LIGHTING);
                     glEnable(GL_LIGHT0);
-                    glEnable(GL_DEPTH_TEST);
-                    // glEnable(GL_CULL_FACE); 
+                    glEnable(GL_DEPTH_TEST); 
                }
-               glutSwapBuffers(); // Desenha the new frame of the game.
+               glutSwapBuffers(); 
           }
           else
           {
                Restart();
           }
-          // glPopMatrix();
 }
 
 void keyPress(unsigned char key, int x, int y)
@@ -606,14 +696,14 @@ void keyPress(unsigned char key, int x, int y)
           case 'a':
           case 'A':
                keyStatus[(int)('a')] = 1; //Using keyStatus trick
-               // if (acting && !running) break;
-               // running = 1;
+               if (acting) break;
+               running = 1;
                break;
           case 'd':
           case 'D':
                keyStatus[(int)('d')] = 1; //Using keyStatus trick
-               // if (acting && !running) break;
-               // running = 1;
+               if (acting) break;
+               running = 1;
                break; 
           case 's':
           case 'S':
@@ -629,6 +719,9 @@ void keyPress(unsigned char key, int x, int y)
                break; 
           case ' ':
                keyStatus[(int)(' ')] = 1;
+               firing = 1;
+               if (acting) break;
+               fire = 1;
                break;
           case 'r':
           case 'R':
@@ -769,12 +862,17 @@ void init(void)
      // glCullFace(GL_BACK);
      // glFrontFace(GL_CW);
      movIdle =  player.loadMeshAnim("Blender/megaman_idle/megaman_idle_######.obj", 14);
+     movIdleFire =  player.loadMeshAnim("Blender/megaman_idle_fire/megaman_idle_fire_######.obj", 14);
      movRun =  player.loadMeshAnim("Blender/megaman_run/megaman_run_######.obj", 12);
+     movRunFire =  player.loadMeshAnim("Blender/megaman_run_fire/megaman_run_fire_######.obj", 12);
+     playerArm.loadMesh("Blender/megaman_idle_fire_arm.obj");
+     playerArm.loadText("Blender/megaman_arm_color.bmp");
      player.loadTexture("Blender/megaman_texture.bmp");
      player.drawInit(movIdle);
 
+
      // movIdleEnemy =  enemy.loadMeshAnim("Blender/megaman_idle/megaman_idle_######.obj", 14);
-     for (int i = 0; i < 1; i++)
+     for (int i = 0; i < numberOfEnemies; i++)
      {  
           movRunEnemy[i] =  enemiesPointer[i].loadMeshAnim("Blender/megaman_run/megaman_run_######.obj", 12);
           enemiesPointer[i].loadTexture("Blender/megaman_texture.bmp");
@@ -878,13 +976,15 @@ void idle(void)
           
           if(keyStatus[(int)('a')] && !onJump && !onFall)
           {
-               player.Rotate(inc,timeDiference);
+               running = 1;
+               player.Rotate(-inc,timeDiference);
                player.OnMove(true);
           }
           
           if(keyStatus[(int)('d')] && !onJump && !onFall)
           {
-               player.Rotate(-inc,timeDiference);
+               running = 1;
+               player.Rotate(inc,timeDiference);
                player.OnMove(true);
           }
 
@@ -975,9 +1075,12 @@ void idle(void)
           if(keyStatus[(int)(' ')])
           {
                player.Aiming(true);
+               fire = 1;
           }
           if(!keyStatus[(int)(' ')])
           {
+               fire = 0;
+               firing = 0;
                player.Aiming(false);
           }
           if(keyStatus[(int)('t')])
@@ -990,20 +1093,21 @@ void idle(void)
           }
           if(fireball)
           {    
-               // fireball->Move(timeDiference);
+               fireball->Move(timeDiference);
           
-               // if (fireball->DetectBulletCollision(&platforms[0], 
-               // numberOfPlatforms, player.GetX(), 
-               // background[0].GetY() + (ViewingWidth/2)) ||
-               // fireball->DetectBackground(&background[0], 
-               // numberOfPlatforms, player.GetX(), 
-               // background[0].GetY() + (ViewingWidth/2)) || 
-               // (fireball->GetDeltaDist() > ViewingWidth/2))
-               // { 
-               //      fireball = NULL;
-               //      delete fireball;
-               //      player.DeleteFireball();
-               // }
+               if (fireball->DetectBulletCollision(&platforms[0], 
+               numberOfPlatforms, player.GetX(), 
+               background[0].GetY() + (ViewingWidth/2)) ||
+               fireball->DetectBackground(&background[0], 
+               numberOfPlatforms, player.GetX(), 
+               background[0].GetY() + (ViewingWidth/2)) || 
+               (fireball->GetDeltaDist() > ViewingWidth/2))
+               // if(fireball->GetDeltaDist  () > ViewingWidth/2)
+               { 
+                    fireball = NULL;
+                    delete fireball;
+                    player.DeleteFireball();
+               }
           
           }
 
@@ -1031,58 +1135,58 @@ void idle(void)
           //      }
           
           // }
-          // for(int i=0; i<numberOfEnemies; i++)
-          // {
-          //      if(fireball)
-          //      {
-          //           if (enemiesPointer[i].Atingido(fireball, player.GetX()) &&
-          //                !enemiesPointer[i].GetDefeatState())
-          //           {
-          //                fireball = NULL;
-          //                delete fireball;
-          //                player.DeleteFireball();
-          //           }
-          //      }
-          //      if(!enemiesPointer[i].GetGroundState() && !enemiesPointer[i].GetDefeatState())
-          //      {
-          //           detectedEnemyGnd = enemiesPointer[i].DetectGround(&platforms[0], 
-          //                                              numberOfPlatforms,
-          //                                              background[0].GetY() + (ViewingWidth/2));
-          //           if(detectedEnemyGnd != -8888)
-          //           {
-          //                enemyGnd = platforms[detectedEnemyGnd].GetY()  - (background[0].GetY() + (ViewingWidth/2));
-          //                gndIsPlat = true;
-          //           }
-          //           else
-          //           {
-          //                gndIsPlat = false;
-          //                enemyGnd = ViewingHeight/2;
-          //           }
-          //           enemiesPointer[i].SetGround(-enemyGnd, gndIsPlat, detectedEnemyGnd);
-          //           enemiesPointer[i].GravityEffect(0,timeDiference);
-          //      }
-          //      // Control animationb
-          //      if (enemiesPointer[i].DetectCollision(&platforms[0], 
-          //                                    numberOfPlatforms, 
-          //                                    background[0].GetY() + (ViewingWidth/2)) || 
-          //                                    enemiesPointer[i].DetectBackground(&background[0], 
-          //                                    1, 
-          //                                    background[0].GetY() + (ViewingWidth/2)) && 
-          //                                    !enemiesPointer[i].GetDefeatState())
-          //      {
-          //           enemiesPointer[i].SetInc(-1);
-          //      }
+          for(int i=0; i<numberOfEnemies; i++)
+          {
+               if(fireball)
+               {
+                    if (enemiesPointer[i].Atingido(fireball, player.GetX()) &&
+                         !enemiesPointer[i].GetDefeatState())
+                    {   
+                         fireball = NULL;
+                         delete fireball;
+                         player.DeleteFireball();
+                    }
+               }
+               if(!enemiesPointer[i].GetGroundState() && !enemiesPointer[i].GetDefeatState())
+               {
+                    detectedEnemyGnd = enemiesPointer[i].DetectGround(&platforms[0], 
+                                                       numberOfPlatforms,
+                                                       background[0].GetY() + (ViewingWidth/2));
+                    if(detectedEnemyGnd != -8888)
+                    {
+                         enemyGnd = platforms[detectedEnemyGnd].GetY()  - (background[0].GetY() + (ViewingWidth/2));
+                         gndIsPlat = true;
+                    }
+                    else
+                    {
+                         gndIsPlat = false;
+                         enemyGnd = ViewingHeight/2;
+                    }
+                    enemiesPointer[i].SetGround(-enemyGnd, gndIsPlat, detectedEnemyGnd);
+                    enemiesPointer[i].GravityEffect(0,timeDiference);
+               }
+               // Control animationb
+               if (enemiesPointer[i].DetectCollision(&platforms[0], 
+                                             numberOfPlatforms, 
+                                             background[0].GetY() + (ViewingWidth/2)) || 
+                                             enemiesPointer[i].DetectBackground(&background[0], 
+                                             1, 
+                                             background[0].GetY() + (ViewingWidth/2)) && 
+                                             !enemiesPointer[i].GetDefeatState())
+               {
+                    enemiesPointer[i].SetInc(-1);
+               }
           
-          //      if(collisionDetect != 0)
-          //      {
-          //           enemiesPointer[i].MoveInX(inc*enemiesPointer[i].GetInc(),timeDiference);
-          //           enemiesPointer[i].OnMove(true);
-          //      }
-          //      else
-          //      {
-          //          enemiesPointer[i].SetInc(-1);; 
-          //      }
-          // }
+               if(collisionDetect != 0)
+               {
+                    enemiesPointer[i].MoveInX(inc*enemiesPointer[i].GetInc(),timeDiference);
+                    enemiesPointer[i].OnMove(true);
+               }
+               else
+               {
+                   enemiesPointer[i].SetInc(-1);; 
+               }
+          }
           
           glutPostRedisplay();
      }
@@ -1097,9 +1201,16 @@ void mouse(int button, int state, int x, int y)
                player.Atira();
                
                mouseLeft = true;
+               ballY = player.GetY();
                ballZ = player.GetZ();
           }
-          
+          if (fireball && keyStatus[(int)(' ')])
+          {
+               fireball = NULL;
+               delete fireball;
+               player.DeleteFireball();
+          }
+
      } 
      else if (button == GLUT_LEFT_BUTTON && state == GLUT_UP)
      {
@@ -1164,7 +1275,7 @@ void reshape (int w, int h) {
 
 
 int main(int argc, char *argv[])
-{
+             {
     // Initialize openGL with Double buffer and RGB color without transparency.
     // Its interesting to try GLUT_SINGLE instead of GLUT_DOUBLE.
     glutInit(&argc, argv);
@@ -1178,7 +1289,7 @@ int main(int argc, char *argv[])
     // Create the window.
     glutInitWindowSize(Width, Height);
     glutInitWindowPosition(150,50);
-    glutCreateWindow("Tranformations 2D");
+    glutCreateWindow("Computação Gráfica -Trabalho 3D ");
     InitGame(argv[1]);
     // Define callbacks.
     glutDisplayFunc(renderScene);

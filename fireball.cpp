@@ -1,3 +1,136 @@
+// #include "fireball.h"
+// #include <math.h>
+// #include <stdio.h>
+// #include <GL/gl.h>
+// #include <GL/glu.h>
+// #include <GL/glut.h>
+// #include <stdlib.h>
+
+// void Fireball::DrawCircle(GLint radius, GLfloat R, GLfloat G, GLfloat B)
+// {
+//     glColor3f (R, G, B);
+//     glPointSize(3.0);
+//     glBegin(GL_POLYGON);
+//         for (int i = 0; i < 360; i+=1) 
+//             glVertex3f(radius * cos(i), radius * sin(i), 0.0);
+//     glEnd();
+// }
+// //Funcao auxiliar para normalizar um vetor a/|a|
+// void normFire(float a[3])
+// {
+//     double norm = sqrt(a[0]*a[0]+a[1]*a[1]+a[2]*a[2]); 
+//     a[0] /= norm;
+//     a[1] /= norm;
+//     a[2] /= norm;
+// }
+
+// //Funcao auxiliar para fazer o produto vetorial entre dois vetores a x b = out
+// void crossFire(float a[3], float b[3], float out[3])
+// {
+//     out[0] = a[1]*b[2] - a[2]*b[1];
+//     out[1] = a[2]*b[0] - a[0]*b[2];
+//     out[2] = a[0]*b[1] - a[1]*b[0];
+// }
+// double ToRad(int degree)
+// {
+// 	return (degree * M_PI)/180;
+// }
+
+
+// void Fireball::DrawFireball()
+// // (GLfloat posForearmX, GLfloat posForearmY, GLfloat posForearmZ,
+// //                             GLfloat posArmX, GLfloat posArmY, GLfloat posArmZ,
+//                             // GLfloat directionAng, GLfloat angleYZ)
+// {
+    
+//     GLfloat materialEmission[] = { 0.00, 0.00, 0.00, 1.0};
+// 	GLfloat materialColor[] = { 1.0, 0.0, 0.0, 1.0};
+// 	GLfloat mat_specular[] = { 1.0, 1.0, 1.0, 1.0};
+// 	GLfloat mat_shininess[] = { 128 };
+// 	glMaterialfv(GL_FRONT, GL_EMISSION, materialEmission);
+// 	glMaterialfv(GL_FRONT, GL_AMBIENT, materialColor);
+// 	glMaterialfv(GL_FRONT, GL_DIFFUSE, materialColor);
+// 	glMaterialfv(GL_FRONT, GL_SPECULAR, mat_specular);
+// 	glMaterialfv(GL_FRONT, GL_SHININESS, mat_shininess);
+//     glColor3f(255, 0, 0);
+
+//     GLfloat mT[4][4] = { 1,0,0,0,
+//                         0,1,0,0,
+//                         0,0,1,0,
+//                         0,0,playerPosZ,1};
+//     glMultMatrixf(&mT[0][0]);
+//     GLfloat m[4][4] = { (GLfloat)cos(ToRad(gDirectionAng)),0,(GLfloat)sin(ToRad(gDirectionAng)),0,
+//                          0,1,0,0,
+//                          (GLfloat)-sin(ToRad(gDirectionAng)),0,(GLfloat)cos(ToRad(gDirectionAng)),0,
+//                          0,0,0,1};
+//     glMultMatrixf(&m[0][0]);
+    
+//     glRotatef(90, 0, 1, 0);
+//     glTranslatef(gX, playerPosY+gY, gZTranslate);
+//     glRotatef(-90, 0, 1, 0);
+//     glRotatef(gAngleYZ+90, 0, 0, 1);
+//     glTranslatef(forearmX, forearmY, forearmZ);
+//     glutSolidSphere(radiusFireball, 50,50);
+// }
+
+// bool Fireball::DetectBackground(Platform *platforms, int len, GLfloat gXpos, GLfloat pos)
+// {
+//     GLfloat y = - (platforms[0].GetY() - pos);
+//     GLfloat fireballPosX = 0;
+//     if (cos(ToRad(gDirectionAng))/abs(cos(ToRad(gDirectionAng))) >= 0){
+//         fireballPosX = playerPosX + gX;
+//     }
+//     else{
+//         fireballPosX = playerPosX - gX;
+//     }
+//     if( sqrt(pow(fireballPosX - platforms[0].GetX() - (platforms[0].GetW()/2), 2)) > platforms[0].GetW()/2 ||
+//         sqrt(pow((y - platforms[0].GetH()/2) - (gY), 2)) > platforms[0].GetH()/2 ||
+//         sqrt(pow((gZ + playerPosZ) - (platforms[0].GetZ() - (platforms[0].GetL()/2)), 2)) > platforms[0].GetL()/2)   
+//     {
+//         return true;
+//     }
+//     return false;
+// }
+
+// bool Fireball::DetectBulletCollision(Platform *platforms, int len, GLfloat gXpos, GLfloat posY)
+// {
+        
+//     for (int i = 0; i < len; i++)
+//     {   
+//         GLfloat y = - (platforms[i].GetY() - posY);
+//         GLfloat fireballPosX = 0;
+//         if (cos(ToRad(gDirectionAng))/abs(cos(ToRad(gDirectionAng))) >= 0){
+//             fireballPosX = playerPosX + gX;
+//         }
+//         else{
+//             fireballPosX = playerPosX - gX;
+//         }
+//         if( sqrt(pow(fireballPosX - (platforms[i].GetX() + (platforms[i].GetW()/2)), 2)) <= platforms[i].GetW()/2 &&
+//             sqrt(pow((y - platforms[i].GetH()/2) - (gY + playerPosY), 2)) <= platforms[i].GetH()/2)// &&
+//             // sqrt(pow(gZ[0] - (platforms[i].GetZ() - (platforms[i].GetL()/2)), 2)) <= platforms[i].GetL() ) 
+//         {
+//             printf("ACERTOU!!!\n");
+//             return true;
+//         }
+//     }
+//     return false;
+// }
+
+// void Fireball::Move(GLfloat deltaTime)
+// {
+//     gZ = gZ + abs(sin(ToRad(gAngleYZ)) * 0.1 * deltaTime); 
+//     gXmove = gXmove + (cos(ToRad(gDirectionAng)) * 0.1 * deltaTime);
+//     gY = gY + (cos(ToRad(gAngleYZ)) * 0.1 * deltaTime);
+
+//     // printf("Pos gX: %f\n", gY[2]+playerPosX);
+//     // printf("Pos gY: %f\n", gY[1]+playerPosY);
+//     // printf("Pos gZ: %f\n", gZ[0]+playerPosZ);
+
+// }
+
+
+
+
 #include "fireball.h"
 #include <math.h>
 #include <stdio.h>
@@ -49,37 +182,32 @@ void ChangeCoord(
 
     float x[3], y[3], z[3];
 	
-	x[0] = ax - bx;
-	x[1] = ay - by;
-	x[2] = az - bz;
-	normFire(x);	
-
-	y[0] = upx - ax;
-	y[1] = upy - ay;
-	y[2] = upz - az;	
-	crossFire(x, y, z);
-	normFire(z);
-
-
-	crossFire(z, x, y);
+	z[0] = bx - ax;
+	z[1] = by - ay;
+	z[2] = bz - az;
+	normFire(z);	
+	
+    x[0] = bx - upx;
+	x[1] = by - upy;
+	x[2] = bz - upz;
+    crossFire(x, z, y);
+    normFire(y);
+    
+	crossFire(y, z, x);
 
 	GLfloat m[4][4] = { x[0],x[1],x[2],0,
                         y[0],y[1],y[2],0,
                         z[0],z[1],z[2],0,
-						(GLfloat)bx,(GLfloat)by,(GLfloat)bz,1};
+						(GLfloat)-bx,(GLfloat)by,(GLfloat)bz,1};
     
     glMultMatrixf(&m[0][0]);
 }
 void Fireball::DrawFireball(GLfloat p0x, GLfloat p0y, GLfloat p0z,
                             GLfloat p1x, GLfloat p1y, GLfloat p1z,
-                            GLfloat p2x, GLfloat p2y, GLfloat p2z)
+                            GLfloat p2x, GLfloat p2y, GLfloat p2z,
+                            GLfloat directionAng, GLfloat angleYZ)
 {
-    // GetPos(x,y,z);
-    // glPushMatrix();
-    glTranslatef(p1x, p1y, p1z);
-    // ChangeCoord(p0x, p0y, p0z,
-    //             p1x, p1y, p1z,
-    //             p2x, p2y, p2z);
+    
     GLfloat materialEmission[] = { 0.00, 0.00, 0.00, 1.0};
 	GLfloat materialColor[] = { 1.0, 0.0, 0.0, 1.0};
 	GLfloat mat_specular[] = { 1.0, 1.0, 1.0, 1.0};
@@ -90,15 +218,39 @@ void Fireball::DrawFireball(GLfloat p0x, GLfloat p0y, GLfloat p0z,
 	glMaterialfv(GL_FRONT, GL_SPECULAR, mat_specular);
 	glMaterialfv(GL_FRONT, GL_SHININESS, mat_shininess);
     glColor3f(255, 0, 0);
+
+    GLfloat mT[4][4] = { 1,0,0,0,
+                        0,1,0,0,
+                        0,0,1,0,
+                        0,0,playerPosZ,1};
+    glMultMatrixf(&mT[0][0]);
+    GLfloat m[4][4] = { (GLfloat)cos(ToRad(90)),0,(GLfloat)sin(ToRad(90)),0,
+                         0,1,0,0,
+                         (GLfloat)-sin(ToRad(90)),0,(GLfloat)cos(ToRad(90)),0,
+                         0,0,0,1};
+    glMultMatrixf(&m[0][0]);
+    
+    glRotatef(90, 0, 1, 0);
+    glTranslatef(p1x, playerPosY+p1y, p1z);
+    glRotatef(-90, 0, 1, 0);
+    glRotatef(angleYZ+90, 0, 0, 1);
+    glTranslatef(p0x, p0y, p0z);
     glutSolidSphere(radiusFireball, 50,50);
-    // glPopMatrix();
 }
 
 bool Fireball::DetectBackground(Platform *platforms, int len, GLfloat gXpos, GLfloat pos)
 {
     GLfloat y = - (platforms[0].GetY() - pos);
-    if( sqrt(pow((gXpos - gX[0]) - platforms[0].GetX() - (platforms[0].GetW()/2), 2)) > platforms[0].GetW()/2 ||
-        sqrt(pow((y - platforms[0].GetH()/2) - (gY[0]), 2)) > platforms[0].GetH()/2)   
+    GLfloat fireballPosX = 0;
+    if (cos(ToRad(gDirectionAng))/abs(cos(ToRad(gDirectionAng))) >= 0){
+        fireballPosX = playerPosX + gY[2];
+    }
+    else{
+        fireballPosX = playerPosX - gY[2];
+    }
+    if( sqrt(pow(fireballPosX - platforms[0].GetX() - (platforms[0].GetW()/2), 2)) > platforms[0].GetW()/2 ||
+        sqrt(pow((y - platforms[0].GetH()/2) - (gY[1]), 2)) > platforms[0].GetH()/2 ||
+        sqrt(pow((gZ[0] + playerPosZ) - (platforms[0].GetZ() - (platforms[0].GetL()/2)), 2)) > platforms[0].GetL()/2)   
     {
         return true;
     }
@@ -111,9 +263,18 @@ bool Fireball::DetectBulletCollision(Platform *platforms, int len, GLfloat gXpos
     for (int i = 0; i < len; i++)
     {   
         GLfloat y = - (platforms[i].GetY() - posY);
-        if( sqrt(pow((gXpos - gX[0]) - platforms[i].GetX() - (platforms[i].GetW()/2), 2)) <= platforms[i].GetW()/2 &&
-            sqrt(pow((y - platforms[i].GetH()/2) - (gY[0]), 2)) <= platforms[i].GetH()/2) 
+        GLfloat fireballPosX = 0;
+        if (cos(ToRad(gDirectionAng))/abs(cos(ToRad(gDirectionAng))) >= 0){
+            fireballPosX = playerPosX + gY[2];
+        }
+        else{
+            fireballPosX = playerPosX - gY[2];
+        }
+        if( sqrt(pow(fireballPosX - (platforms[i].GetX() + (platforms[i].GetW()/2)), 2)) <= platforms[i].GetW()/2 &&
+            sqrt(pow((y - platforms[i].GetH()/2) - (gY[1] + playerPosY), 2)) <= platforms[i].GetH()/2)// &&
+            // sqrt(pow(gZ[0] - (platforms[i].GetZ() - (platforms[i].GetL()/2)), 2)) <= platforms[i].GetL() ) 
         {
+            printf("ACERTOU!!!\n");
             return true;
         }
     }
@@ -122,15 +283,13 @@ bool Fireball::DetectBulletCollision(Platform *platforms, int len, GLfloat gXpos
 
 void Fireball::Move(GLfloat deltaTime)
 {
-    if (gDirectionAng < -0.1)
-    {
-        gX[0] = gX[0] - abs(sin((abs(gDirectionAng)*M_PI)/180) * 0.1 * deltaTime);
-        gY[0] = gY[0] - (- cos((gDirectionAng*M_PI)/180) * 0.1 * deltaTime);
-    }
-    if (gDirectionAng > 0.1)
-    {
-        gX[0] = gX[0] + abs(sin((abs(gDirectionAng)*M_PI)/180) * 0.1 * deltaTime);
-        gY[0] = gY[0] - (- cos((abs(gDirectionAng)*M_PI)/180) * 0.1 * deltaTime);
-    }
+    gY[0] = gY[0] - (sin(ToRad(gDirectionAng)) * 0.1 * deltaTime);
+    gY[1] = gY[1] + (cos(ToRad(gAngleYZ)) * 0.1 * deltaTime);
+    gY[2] = gY[2] + abs(sin(ToRad(gAngleYZ)) * 0.1 * deltaTime); 
+
+    // printf("Pos gX: %f\n", gY[2]+playerPosX);
+    // printf("Pos gY: %f\n", gY[1]+playerPosY);
+    // printf("Pos gZ: %f\n", gZ[0]+playerPosZ);
+
 }
 
