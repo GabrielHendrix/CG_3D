@@ -218,24 +218,33 @@ void Fireball::DrawFireball(GLfloat p0x, GLfloat p0y, GLfloat p0z,
 	glMaterialfv(GL_FRONT, GL_SPECULAR, mat_specular);
 	glMaterialfv(GL_FRONT, GL_SHININESS, mat_shininess);
     glColor3f(255, 0, 0);
+    glPushMatrix();
+        GLfloat mT[4][4] = { 1,0,0,0,
+                            0,1,0,0,
+                            0,0,1,0,
+                            0,0,playerPosZ,1};
+        glMultMatrixf(&mT[0][0]);
+        GLfloat m[4][4] = { (GLfloat)cos(ToRad(directionAng)),0,(GLfloat)sin(ToRad(directionAng)),0,
+                            0,1,0,0,
+                            (GLfloat)-sin(ToRad(directionAng)),0,(GLfloat)cos(ToRad(directionAng)),0,
+                            0,0,0,1};
+        glMultMatrixf(&m[0][0]);
+        
+        glRotatef(90, 0, 1, 0);
+        glTranslatef(p1x, playerPosY+p1y, p1z);
+        glRotatef(-90, 0, 1, 0);
+        glRotatef(angleYZ+90, 0, 0, 1);
+        glTranslatef(p0x, p0y, p0z);
+        glRotatef(90, 0, 1, 0);
+        glRotatef(angleYZ+90, 1, 0, 0);
+        glRotatef(directionAng, 0, 1, 0);
+        glutSolidSphere(radiusFireball, 50,50);
+    glPopMatrix();
 
-    GLfloat mT[4][4] = { 1,0,0,0,
-                        0,1,0,0,
-                        0,0,1,0,
-                        0,0,playerPosZ,1};
-    glMultMatrixf(&mT[0][0]);
-    GLfloat m[4][4] = { (GLfloat)cos(ToRad(90)),0,(GLfloat)sin(ToRad(90)),0,
-                         0,1,0,0,
-                         (GLfloat)-sin(ToRad(90)),0,(GLfloat)cos(ToRad(90)),0,
-                         0,0,0,1};
-    glMultMatrixf(&m[0][0]);
-    
-    glRotatef(90, 0, 1, 0);
-    glTranslatef(p1x, playerPosY+p1y, p1z);
-    glRotatef(-90, 0, 1, 0);
-    glRotatef(angleYZ+90, 0, 0, 1);
-    glTranslatef(p0x, p0y, p0z);
-    glutSolidSphere(radiusFireball, 50,50);
+    // glPushMatrix();
+    //     glTranslatef(p2x, p2y, p2z);
+    //     glutSolidSphere(radiusFireball, 50,50);
+    // glPopMatrix();
 }
 
 bool Fireball::DetectBackground(Platform *platforms, int len, GLfloat gXpos, GLfloat pos)
@@ -252,7 +261,7 @@ bool Fireball::DetectBackground(Platform *platforms, int len, GLfloat gXpos, GLf
         sqrt(pow((y - platforms[0].GetH()/2) - (gY[1]), 2)) > platforms[0].GetH()/2 ||
         sqrt(pow((gZ[0] + playerPosZ) - (platforms[0].GetZ() - (platforms[0].GetL()/2)), 2)) > platforms[0].GetL()/2)   
     {
-        return true;
+        // return true;
     }
     return false;
 }
@@ -265,13 +274,13 @@ bool Fireball::DetectBulletCollision(Platform *platforms, int len, GLfloat gXpos
         GLfloat y = - (platforms[i].GetY() - posY);
         GLfloat fireballPosX = 0;
         if (cos(ToRad(gDirectionAng))/abs(cos(ToRad(gDirectionAng))) >= 0){
-            fireballPosX = playerPosX + gY[2];
+            fireballPosX = playerPosX + gX[2];
         }
         else{
-            fireballPosX = playerPosX - gY[2];
+            fireballPosX = playerPosX - gX[2];
         }
         if( sqrt(pow(fireballPosX - (platforms[i].GetX() + (platforms[i].GetW()/2)), 2)) <= platforms[i].GetW()/2 &&
-            sqrt(pow((y - platforms[i].GetH()/2) - (gY[1] + playerPosY), 2)) <= platforms[i].GetH()/2)// &&
+            sqrt(pow((y - platforms[i].GetH()/2) - (gY[2] + playerPosY), 2)) <= platforms[i].GetH()/2)// &&
             // sqrt(pow(gZ[0] - (platforms[i].GetZ() - (platforms[i].GetL()/2)), 2)) <= platforms[i].GetL() ) 
         {
             printf("ACERTOU!!!\n");
@@ -283,13 +292,10 @@ bool Fireball::DetectBulletCollision(Platform *platforms, int len, GLfloat gXpos
 
 void Fireball::Move(GLfloat deltaTime)
 {
-    gY[0] = gY[0] - (sin(ToRad(gDirectionAng)) * 0.1 * deltaTime);
-    gY[1] = gY[1] + (cos(ToRad(gAngleYZ)) * 0.1 * deltaTime);
-    gY[2] = gY[2] + abs(sin(ToRad(gAngleYZ)) * 0.1 * deltaTime); 
 
-    // printf("Pos gX: %f\n", gY[2]+playerPosX);
-    // printf("Pos gY: %f\n", gY[1]+playerPosY);
-    // printf("Pos gZ: %f\n", gZ[0]+playerPosZ);
-
+    gX[0] = gX[0] + abs(sin(ToRad(gAngleYZ)) * 0.1 * deltaTime);
+    gX[2] = gX[2] + abs(sin(ToRad(gAngleYZ)) * 0.1 * deltaTime);
+    gY[2] = gY[2] + (cos(ToRad(gAngleYZ)) * 0.1 * deltaTime);
+    gZ[2] = gZ[2] + (sin(ToRad(gDirectionAng)) * 0.1 * deltaTime);
 }
 

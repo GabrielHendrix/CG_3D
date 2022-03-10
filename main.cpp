@@ -172,9 +172,9 @@ void InitGame(const std::string arg)
      ViewingHeight = aux;
      aux = VectorPlatformsCreator();
      aux2 = CalculatesLocationAndSizeOfPlayer();
-     ground = ViewingHeight/2;
-     previousGround = ViewingHeight/2;
-     newGround = ViewingHeight/2;
+     ground = background[0].GetH()/2;
+     previousGround = background[0].GetH()/2;
+     newGround = background[0].GetH()/2;
      jumpSize = 0;
      deltaX = 0;
      shootAngle = 0.0;
@@ -194,9 +194,9 @@ void Restart(void)
      {
           enemies.clear();
           aux2 = CalculatesLocationAndSizeOfPlayer();
-          ground = ViewingHeight/2;
-          previousGround = ViewingHeight/2;
-          newGround = ViewingHeight/2;
+          ground = background[0].GetH()/2;
+          previousGround = background[0].GetH()/2;
+          newGround = background[0].GetH()/2;
           atingido = 0; 
           damage = ViewingWidth/4;
           bgDetect = 0;
@@ -331,12 +331,12 @@ int CalculatesLocationAndSizeOfPlayer()
                          {
                               player.SetX(StringToInt(cx));
                               player.SetY(StringToInt(radius)-StringToInt(cy));
-                              player.SetRadius(StringToInt(radius));
+                              player.SetRadius(StringToInt(radius)*0.3);
                               player.SetPercentual((StringToInt(radius)*3)/130.0);
                          }
                          if (fill == "red")
                          {
-                              enemies.push_back(Enemy(StringToInt(cx), StringToInt(cy), 0, (StringToInt(radius)*3)/130.0, StringToInt(radius)));
+                              enemies.push_back(Enemy(StringToInt(cx), StringToInt(cy), 0, (StringToInt(radius)*3)/130.0, StringToInt(radius)*0.3));
                          }
                     }
                }
@@ -460,43 +460,7 @@ GLfloat degToRad(int degree)
 	return (degree * M_PI)/180;
 }
 
-// void MygluLookAt(
-//         GLdouble eyex, GLdouble eyey, GLdouble eyez, 
-//         GLdouble centerx, GLdouble centery, GLdouble centerz, 
-//         GLdouble upx, GLdouble upy, GLdouble upz)
-// {
-//     // float forward[3], side[3], up[3];
-//     //column-major order
-//     GLfloat m[4][4] = { 1,0,0,0,
-//                         0,1,0,0,
-//                         0,0,1,0,
-//                         0,0,0,1};
 
-// 	//COLOQUE SEU CODIGO AQUI
-//     GLfloat forward[3]{(GLfloat)eyex, (GLfloat)eyey, (GLfloat)eyez}, side[3], up[3]{(GLfloat)upx, (GLfloat)upy, (GLfloat)upz};
-
-
-// 	normalize(forward);		
-// 	m[0][2] = forward[0],
-// 	m[1][2] = forward[1],
-// 	m[2][2] = forward[2];
-
-// 	cross(up, forward, side);
-// 	normalize(side);
-//     m[0][0] = side[0],
-// 	m[1][0] = side[1],
-// 	m[2][0] = side[2];
-//     cross(forward,side,up);
-//     normalize(up);
-//     m[0][1] = up[0],
-// 	m[1][1] = up[1],
-// 	m[2][1] = up[2];
-
-// 	//COLOQUE SEU CODIGO AQUI
-//     glMultMatrixf(&m[0][0]);
-//     glTranslatef(-eyex, -eyey, -eyez);
-
-// }
 void DrawAxes(double size)
 {
     GLfloat mat_ambient_r[] = { 1.0, 0.0, 0.0, 1.0 };
@@ -591,9 +555,9 @@ void renderScene(void)
                {
                     // Clear the screen.                                                         
                     // glClear(GL_COLOR_BUFFER_BIT);
-               
+                    // (background[0].GetY() + (background[0].GetH()/2))
                     glPushMatrix();
-                    glTranslatef(-player.GetX(),background[0].GetY() + (ViewingWidth/2),0);
+                    glTranslatef(-player.GetX(),background[0].GetY() + (background[0].GetH()/2),0);
                     background[0].Draw();
                     glPopMatrix();
   
@@ -611,17 +575,17 @@ void renderScene(void)
                     for (int j = numberOfPlatforms-1; j >= 0; j--)
                     {
                          glPushMatrix();
-                         glTranslatef(-player.GetX(),background[0].GetY() + (ViewingWidth/2),0);
+                         glTranslatef(-player.GetX(),background[0].GetY() + (background[0].GetH()/2),0);
                          platforms[j].Draw();
                          glPopMatrix();
                     }
 
                     if(fireball) 
                     {
-                         glPushMatrix();
-                              fireball->Draw(); 
-                              DrawAxes(5);    
-                         glPopMatrix();
+                         // glPushMatrix();
+                         fireball->Draw(); 
+                              // DrawAxes(5);    
+                         // glPopMatrix();
                     }
         
                     glPushMatrix();
@@ -641,7 +605,7 @@ void renderScene(void)
 
                          glTranslatef(0, player.GetY(), 0);
                          
-                         glScalef(player.GetBaseHeight(), player.GetBaseHeight(), player.GetBaseHeight());
+                         glScalef(player.GetRadius()*2, player.GetRadius()*2, player.GetRadius()*2);
                          // glRotatef(player.GetHDirection(), 0, 1, 0);
                          drawPlayer();
                          // printf("hDirection: %d\n", player.GetHDirection());
@@ -667,7 +631,17 @@ void renderScene(void)
                               glPushMatrix(); 
                               glTranslatef(enemiesPointer[i].GetX() - player.GetX(), enemiesPointer[i].GetY(),-ViewingHeight/4);
                                    drawEnemy(i);
+                                   // glPushMatrix(); 
+                                   //      glTranslatef(0, player.GetRadius()/2,0);
+                                   //      glutSolidCube(player.GetRadius()/2);
+                                   // glPopMatrix();
                                    enemiesPointer[i].SetZ(-ViewingHeight/4);
+                              glPopMatrix();
+                              glPushMatrix(); 
+                              glTranslatef((enemiesPointer[i].GetX() + (enemiesPointer[i].GetRadius()/2)) - player.GetX(), 
+                                           (enemiesPointer[i].GetY()+(player.GetRadius()*4)), 
+                                           -ViewingHeight/4 + (enemiesPointer[i].GetRadius()/2));
+                                   glutSolidCube(player.GetRadius());
                               glPopMatrix();
                          }
                     }
@@ -924,14 +898,14 @@ void idle(void)
           //Treat keyPress
           fireball = player.GetFireball();
     
-          if((currentTime - deltaShoot) > 3000)
-          {
-               deltaShoot = glutGet(GLUT_ELAPSED_TIME);
-               ind = player.DetectDistance(&enemiesPointer[0], numberOfEnemies);
-               shootAngle = atanf((player.GetY() -  enemiesPointer[ind].GetY())/sqrt(pow(player.GetX() - enemiesPointer[ind].GetX(), 2))) * (180/M_PI);
-               enemiesPointer[ind].SetArmAngle(shootAngle);
-               enemiesPointer[ind].Aiming(true);
-          }
+          // if((currentTime - deltaShoot) > 3000)
+          // {
+          //      deltaShoot = glutGet(GLUT_ELAPSED_TIME);
+          //      ind = player.DetectDistance(&enemiesPointer[0], numberOfEnemies);
+          //      shootAngle = atanf((player.GetY() -  enemiesPointer[ind].GetY())/sqrt(pow(player.GetX() - enemiesPointer[ind].GetX(), 2))) * (180/M_PI);
+          //      enemiesPointer[ind].SetArmAngle(shootAngle);
+          //      enemiesPointer[ind].Aiming(true);
+          // }
           // if((currentTime - deltaTimeShoot) > 1000 && !fireballEnemy && !enemiesPointer[ind].GetDefeatState())
           // {
           //      deltaTimeShoot = glutGet(GLUT_ELAPSED_TIME);
@@ -940,16 +914,18 @@ void idle(void)
           //      enemiesPointer[ind].Atira();
           //      fireballEnemy = enemiesPointer[ind].GetFireball();               
           // }
-          auxGround = player.DetectGround(&platforms[0], &enemiesPointer[0], numberOfPlatforms, numberOfEnemies, background[0].GetY() + (ViewingWidth/2));
-          collisionDetect = player.DetectCollision(&platforms[0], &enemiesPointer[0], numberOfPlatforms, numberOfEnemies, background[0].GetY() + (ViewingWidth/2));
-          bgDetect = player.DetectBackground(&background[0], 1, background[0].GetY() + (ViewingWidth/2));
+          auxGround = player.DetectGround(&platforms[0], &enemiesPointer[0], numberOfPlatforms, numberOfEnemies, background[0].GetY() + (background[0].GetH()/2));
+          collisionDetect = player.DetectCollision(&platforms[0], &enemiesPointer[0], numberOfPlatforms, numberOfEnemies, background[0].GetY() +  (background[0].GetH()/2));
+          bgDetect = player.DetectBackground(&background[0], 1, background[0].GetY() + (background[0].GetH()/2));
           if(auxGround != -8888)
           {
-               newGround = auxGround - (background[0].GetY() + (ViewingWidth/2));
+               // printf("background[0].GetY(): %f\n", background[0].GetY());
+               // printf("ViewingWidth/2: %f\n", ViewingWidth/2);
+               newGround = auxGround - (background[0].GetY() + (background[0].GetH()/2));
           }
           else
           {
-               newGround = ViewingHeight/2;
+               newGround = background[0].GetH()/2;
           }
           player.SetGround(-newGround);
           if(updateDrawing)
@@ -1014,7 +990,7 @@ void idle(void)
                jumpSize = player.GetY();
                pressJump = true;
           }
-          if((abs(player.GetRadius()*8) <= abs(player.GetY()-jumpSize)) || collisionDetect!=2 || !mouseRight)
+          if((abs(player.GetRadius()*26) <= abs(player.GetY()-jumpSize)) || collisionDetect!=2 || !mouseRight)
           {
                player.OnJump(false);
                onJump = false;
@@ -1097,10 +1073,10 @@ void idle(void)
           
                if (fireball->DetectBulletCollision(&platforms[0], 
                numberOfPlatforms, player.GetX(), 
-               background[0].GetY() + (ViewingWidth/2)) ||
+               background[0].GetY() + (background[0].GetH()/2)) ||
                fireball->DetectBackground(&background[0], 
                numberOfPlatforms, player.GetX(), 
-               background[0].GetY() + (ViewingWidth/2)) || 
+               background[0].GetY() + (background[0].GetH()/2)) || 
                (fireball->GetDeltaDist() > ViewingWidth/2))
                // if(fireball->GetDeltaDist  () > ViewingWidth/2)
                { 
@@ -1151,19 +1127,21 @@ void idle(void)
                {
                     detectedEnemyGnd = enemiesPointer[i].DetectGround(&platforms[0], 
                                                        numberOfPlatforms,
-                                                       background[0].GetY() + (ViewingWidth/2));
+                                                       background[0].GetY() + (background[0].GetH()/2));
                     if(detectedEnemyGnd != -8888)
                     {
-                         enemyGnd = platforms[detectedEnemyGnd].GetY()  - (background[0].GetY() + (ViewingWidth/2));
+                         enemyGnd = platforms[detectedEnemyGnd].GetY() - (background[0].GetY() + (background[0].GetH()/2));
+                         // enemyGnd = platforms[detectedEnemyGnd].GetY()  - (background[0].GetY() + (ViewingWidth/2));
                          gndIsPlat = true;
                     }
                     else
                     {
                          gndIsPlat = false;
-                         enemyGnd = ViewingHeight/2;
+                         enemyGnd = background[0].GetH()/2;
                     }
                     enemiesPointer[i].SetGround(-enemyGnd, gndIsPlat, detectedEnemyGnd);
-                    enemiesPointer[i].GravityEffect(0,timeDiference);
+                    enemiesPointer[i].SetY(enemyGnd);
+                    // enemiesPointer[i].GravityEffect(0,timeDiference);
                }
                // Control animationb
                if (enemiesPointer[i].DetectCollision(&platforms[0], 
@@ -1171,12 +1149,12 @@ void idle(void)
                                              background[0].GetY() + (ViewingWidth/2)) || 
                                              enemiesPointer[i].DetectBackground(&background[0], 
                                              1, 
-                                             background[0].GetY() + (ViewingWidth/2)) && 
+                                             background[0].GetY() + (background[0].GetH()/2)) && 
                                              !enemiesPointer[i].GetDefeatState())
                {
                     enemiesPointer[i].SetInc(-1);
                }
-          
+               
                if(collisionDetect != 0)
                {
                     enemiesPointer[i].MoveInX(inc*enemiesPointer[i].GetInc(),timeDiference);

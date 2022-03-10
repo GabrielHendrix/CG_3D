@@ -1,0 +1,73 @@
+# Blender MTL File: 'meagaman.blend'
+# Material Count: 7
+
+newmtl None
+Ns 500
+Ka 0.8 0.8 0.8
+Kd 0.8 0.8 0.8
+Ks 0.8 0.8 0.8
+d 1
+illum 2
+
+newmtl black.001
+Ns 86.470579
+Ka 1.000000 1.000000 1.000000
+Kd 0.000000 0.000000 0.000000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 2
+
+newmtl dark_blue.001
+Ns 86.470579
+Ka 0.836364 0.836364 0.836364
+Kd 0.000000 0.004178 0.550965
+Ks 0.963636 0.963636 0.963636
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 3
+map_Bump C:\\Users\\Gabriel Hendrix\\Downloads\\megaman-iyan-3d-pro\\source\\megaman\\images\\rockman_body_nrm.png
+map_Kd C:\\Users\\Gabriel Hendrix\\Downloads\\skin.001-Cor(2).png
+
+newmtl inside.001
+Ns 86.470579
+Ka 1.000000 1.000000 1.000000
+Kd 1.000000 1.000000 1.000000
+Ks 0.000000 0.000000 0.000000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 1
+
+newmtl light_blue.001
+Ns 86.470579
+Ka 0.300000 0.300000 0.300000
+Kd 0.012929 0.354312 0.800000
+Ks 0.718182 0.718182 0.718182
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 3
+map_Bump C:\\Users\\Gabriel Hendrix\\Downloads\\megaman-iyan-3d-pro\\source\\megaman\\images\\rockman_body_nrm.png
+
+newmtl red.002
+Ns 0.000000
+Ka 1.000000 1.000000 1.000000
+Kd 1.000000 0.000000 0.000850
+Ks 0.000000 0.000000 0.000000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 1
+
+newmtl skin.001
+Ns 86.470579
+Ka 1.000000 1.000000 1.000000
+Kd 1.000000 0.415521 0.361040
+Ks 0.262162 0.262162 0.262162
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 2

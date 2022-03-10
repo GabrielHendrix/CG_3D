@@ -47,7 +47,7 @@ int Enemy::loadMeshAnim(string path, int qtd){
 void Enemy::draw(int movID, int frameId){
     // glPushMatrix();
     // glTranslatef(0, gY, gZ);
-    glScalef(baseHeight, baseHeight, baseHeight);
+    glScalef(radius*2, radius*2, radius*2);
     glRotatef(90, 0, 1, 0);
     glRotatef(hDirection, 0, 1, 0);
     if (this->texID != -1){
@@ -216,14 +216,6 @@ bool Enemy::GravityEffect(GLfloat delta, GLdouble deltaTime)
     {
         return false;
     }
-    // if(ground < gY)
-    // {
-    //     // gY -= percentual*deltaTime;
-    //     gY = ground;
-    //     // gX += (dx/9)*percentual*deltaTime;
-    // }
-
-    // return true; 
 }
 void Enemy::MoveInX(GLfloat delta, GLdouble deltaTime)
 {
@@ -241,60 +233,14 @@ void Enemy::MoveInX(GLfloat delta, GLdouble deltaTime)
     dz = sin(degreeToRadEnemy(direction)) * delta;
 
     gX += dx*percentual*deltaTime/15;
-    gZ -= dz*percentual*deltaTime/15;    
+    gZ += dz*percentual*deltaTime/15;    
     
-    if(ground < gY-legHeight)
-        gY = gY-legHeight;
+    if(ground < gY-(radius*2))
+        gY = gY-(radius*2);
     else
     {
         gY = ground;
     }
-    // gX += dx*percentual*deltaTime/15;
-    // if(dx > 0)
-    // {
-    //     direction = 0;
-    // }
-    // if(dx < 0)
-    // {
-    //     direction = 180;
-    // }
-    
-    // if(ground < gY)
-    //     gY = gY;
-    // else
-    // gY = ground - (cos((abs(gTheta0)*M_PI)/180) * legHeight ); // * deltaTime/15;
-    // gTheta0 += inc0 * abs(dx) ;
-    // gTheta1 += inc1 * abs(dx);
-    // gTheta01 += inc01 * abs(dx);
-    // gTheta11 += inc11 * abs(dx);
-    // if(gTheta01 == -45 || gTheta01 == 0)
-    //     inc01 *= -1;
-    // if(gTheta11 == -45 || gTheta11 == 0)
-    //     inc11 *= -1;
-    // if(gTheta1 == 225 || gTheta1 == 135)
-    //     inc1 *= -1;
-    // if(gTheta0 == -225 || gTheta0 == -135)
-    //     inc0 *= -1;
-    // if(gTheta1 == 225) 
-    // {
-    //     inc11 = 0;
-    //     gTheta11 = 0;
-    // }
-    // if(gTheta1 == 135)
-    // {
-    //     inc11 = -1; 
-    //     gTheta11 = 0;
-    // }
-    // if(gTheta0 == -225) 
-    // {
-    //     inc01 = -1;
-    //     gTheta01 = 0;
-    // }
-    // if(gTheta0 == -135)
-    // {
-    //     inc01 = 0; 
-    //     gTheta01 = 0;
-    // }
 }
 
 void Enemy::Aiming(bool is_aiming)
@@ -311,14 +257,14 @@ bool Enemy::DetectBackground(Platform *platforms, int len, GLfloat pos)
 {
     GLfloat y = - (platforms[0].GetY() - pos);
 
-    if(gX-baseWidth <= platforms[0].GetX())  
+    if(gX-radius*2 <= platforms[0].GetX())  
     {
-        gX= platforms[0].GetX() + baseWidth;
+        gX= platforms[0].GetX() + radius*2;
         return true;
     }
-    else if(gX+baseWidth >= (platforms[0].GetX() + platforms[0].GetW()))
+    else if(gX+radius*2 >= (platforms[0].GetX() + platforms[0].GetW()))
     {
-        gX= platforms[0].GetX() + (platforms[0].GetW() - baseWidth);
+        gX= platforms[0].GetX() + (platforms[0].GetW() - radius*2);
         return true;
     }
     return false;
@@ -328,13 +274,11 @@ GLint Enemy::DetectGround(Platform *platforms, int len, GLfloat pos)
 
     for (int i = 0; i < len; i++)
     {
-
-        // printf("(-gY + legHeight + pos) %f\n", -(gY - pos + legHeight) );
         GLfloat y = - (platforms[i].GetY() - pos);
-        if(((gX+(baseWidth/2)+memberWidth > platforms[i].GetX()) && (gX-(baseWidth/2)-memberWidth < (platforms[i].GetX() + platforms[i].GetW()))) &&
-            sqrt(pow((gY - legHeight) - y,2)) <= baseHeight+legHeight)
-        // if(((gX-baseWidth >= platforms[i].GetX()) && 
-        //     (gX+baseWidth <= (platforms[i].GetX() + platforms[i].GetW()))) &&
+        if(((gX+(2*radius) > platforms[i].GetX()) && (gX-(2*radius) < (platforms[i].GetX() + platforms[i].GetW()))) &&
+            sqrt(pow((gY - (radius*2)) - y,2)) <= (radius*4))
+        // if(((gX-radius*2 >= platforms[i].GetX()) && 
+        //     (gX+radius*2 <= (platforms[i].GetX() + platforms[i].GetW()))) &&
         //     // gY - legHeight/4 >= y)
         //     sqrt(pow((gY + legHeight) - platforms[i].GetY(),2)) <= legHeight)
         {
@@ -361,16 +305,16 @@ bool Enemy::DetectCollision(Platform *platforms, int len, GLfloat pos)
             
             if (((gY - legHeight/4 <= y) &&  (gY + legHeight/4 >= (y - platforms[i].GetH()))))
             {
-                if((gX+baseWidth >= platforms[i].GetX()) && gX+baseWidth < (platforms[i].GetX() + platforms[i].GetW()) &&
-                    gX+baseWidth <= platforms[i].GetX() + (platforms[i].GetW()/4))
+                if((gX+radius*2 >= platforms[i].GetX()) && gX+radius*2 < (platforms[i].GetX() + platforms[i].GetW()) &&
+                    gX+radius*2 <= platforms[i].GetX() + (platforms[i].GetW()/4))
                 {
-                    gX= platforms[i].GetX() - baseWidth;
+                    gX= platforms[i].GetX() - radius*2;
                     return true;
                 }
-                else if((gX-baseWidth > platforms[i].GetX()) && gX-baseWidth <= (platforms[i].GetX() + platforms[i].GetW()) &&
-                    gX-baseWidth > platforms[i].GetX() + (platforms[i].GetW()/2) + (platforms[i].GetW()/4))
+                else if((gX-radius*2 > platforms[i].GetX()) && gX-radius*2 <= (platforms[i].GetX() + platforms[i].GetW()) &&
+                    gX-radius*2 > platforms[i].GetX() + (platforms[i].GetW()/2) + (platforms[i].GetW()/4))
                 {
-                    gX= platforms[i].GetX() + (platforms[i].GetW() +baseWidth);
+                    gX= platforms[i].GetX() + (platforms[i].GetW() +radius*2);
                     return true;
                 }
             }
@@ -381,14 +325,14 @@ bool Enemy::DetectCollision(Platform *platforms, int len, GLfloat pos)
         // printf("detectedEnemyGnd %d\n", detectedEnemyGnd);
         y = - (platforms[detectedEnemyGnd].GetY() - pos);
 
-        if(gX-baseWidth <= (platforms[detectedEnemyGnd].GetX()))
+        if(gX-radius*2 <= (platforms[detectedEnemyGnd].GetX()))
         {
-            gX = platforms[detectedEnemyGnd].GetX() + baseWidth + 1;
+            gX = platforms[detectedEnemyGnd].GetX() + radius*2 + 1;
             return true;
         }
-        else if(gX+baseWidth >= (platforms[detectedEnemyGnd].GetX() + platforms[detectedEnemyGnd].GetW()))
+        else if(gX+radius*2 >= (platforms[detectedEnemyGnd].GetX() + platforms[detectedEnemyGnd].GetW()))
         {
-            gX = platforms[detectedEnemyGnd].GetX() + (platforms[detectedEnemyGnd].GetW() - baseWidth - 1);
+            gX = platforms[detectedEnemyGnd].GetX() + (platforms[detectedEnemyGnd].GetW() - radius*2 - 1);
             return true;
         }
     }
@@ -433,13 +377,13 @@ void Enemy::Atira()
     // {
     //     if(!on_move)
     //     {
-    //         x = baseWidth;
-    //         y = GetY() + baseHeight;
+    //         x = radius*2;
+    //         y = GetY() + radius*2;
     //     }
     //     else if (on_move)
     //     {
     //         x = 0;
-    //         y = GetY() + baseHeight;
+    //         y = GetY() + radius*2;
     //     }
     //     // RotatePoint(x, y, armAngle + 270, xa, ya);
     //     // *fireball = Fireball(xa, ya, armAngle + 270);
@@ -450,13 +394,13 @@ void Enemy::Atira()
     // {
     //     if(!on_move)
     //     {
-    //         x = baseWidth;
-    //         y = GetY() + baseHeight;
+    //         x = radius*2;
+    //         y = GetY() + radius*2;
     //     }
     //     else if (on_move)
     //     {
-    //         x = baseHeight;
-    //         y = GetY() + baseHeight;
+    //         x = radius*2;
+    //         y = GetY() + radius*2;
     //     }
     //     // RotatePoint(x, y, -armAngle - 270, xa, ya);
     //     // *fireball = Fireball(xa, ya, -armAngle - 270);
@@ -469,20 +413,32 @@ bool Enemy::Atingido(Fireball *fireball, GLfloat pos)
     if (fireball)
     {
         fireball->GetPos(x,y,z);
-        printf("BallX: %f\n", x);
-        printf("BallY: %f\n", y);
-        printf("BallZ: %f\n\n", z);
+        // printf("BallX: %f\n", x);
+        // printf("BallY: %f\n", y);
+        // printf("BallZ: %f\n\n", z);
         
-        printf("gX: %f\n",   gX);
-        printf("gY: %f\n",   gY);
-        printf("gZ: %f\n\n", gZ);
-        if(abs(sqrt(pow(gX - (x), 2))) < baseWidth &&
-           abs(sqrt(pow(gY - (y), 2))) < (baseHeight*1.5) &&
-           abs(sqrt(pow(gZ - (z), 2))) < baseWidth)
+        // printf("gX: %f\n",   gX);
+        // printf("gY: %f\n",   gY);
+        // printf("gZ: %f\n\n", gZ);
+        // glPushMatrix(); 
+        //     glTranslatef((gX+(radius/3)) - pos, gY+radius/2,gZ);
+        //     glutSolidCube(radius);
+        // glPopMatrix();
+        if(abs(sqrt(pow((gX+(radius/3)) - x, 2))) < (radius*2)/3 &&
+           abs(sqrt(pow((gY+radius*4) - y, 2))) < radius &&
+           abs(sqrt(pow((gZ+(radius/3)) - z, 2))) < (radius*2)/3)
         {
-            
-            defeat = true;
-            return true;
+            printf("BallX: %f\n", x);
+            printf("BallY: %f\n", y);
+            printf("BallZ: %f\n\n", z);
+
+            printf("gX: %f\n",   (gX+(radius/3)));
+            printf("gY: %f\n",   (gY+(radius/2)));
+            printf("gZ: %f\n\n", (gZ+(radius/3)));
+            printf("INIMIGO ATINGIDO!\n");
+            // defeat = true;
+            // return true;
+            return false;
         }
         return false;
     }  

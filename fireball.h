@@ -104,16 +104,16 @@
 #define radiusFireball 1
 class Fireball
 {
-    GLfloat gX[3], gY[3], gZ[3], gDirectionAng, gAngleYZ, gXInit, gYInit, playerPosX, playerPosY, playerPosZ;
+    GLfloat gX[3], gY[3], gZ[3], gDirectionAng, gAngleYZ, gXInit, gYInit, gZInit, playerPosX, playerPosY, playerPosZ;
 
 private:
     void DrawCircle(GLint radius, GLfloat R, GLfloat G, GLfloat B);
 
 public:
     // Fireball(GLfloat x, GLfloat y, GLfloat z, GLfloat directionAng)
-    Fireball(GLfloat x0, GLfloat x1, GLfloat x2, 
-             GLfloat y0, GLfloat y1, GLfloat y2, 
-             GLfloat z0, GLfloat z1, GLfloat z2, 
+    Fireball(GLfloat x0, GLfloat y0, GLfloat z0, 
+             GLfloat x1, GLfloat y1, GLfloat z1, 
+             GLfloat x2, GLfloat y2, GLfloat z2, 
              GLfloat directionAng, GLfloat angleYZ,
              GLfloat playerX, GLfloat playerY, GLfloat playerZ)
     {
@@ -126,38 +126,39 @@ public:
         gZ[0] = z0;
         gZ[1] = z1;
         gZ[2] = z2;
-        gXInit = y0;
+        gXInit = x1;
         gYInit = y1;
+        gZInit = z1;
         gDirectionAng = directionAng;
         gAngleYZ = angleYZ;
-        playerPosX = playerX;
+        playerPosX = playerX;   
         playerPosY = playerY;
         playerPosZ = playerZ;
     };
     ~Fireball(){};
     void Draw()
     {
-        DrawFireball(gX[0], gX[1], gX[2], 
-                     gY[0], gY[1], gY[2], 
-                     gZ[0], gZ[1], gZ[2],
+        DrawFireball(gX[0], gY[0], gZ[0],  
+                     gX[1], gY[1], gZ[1],
+                     gX[2], gY[2], gZ[2],
                      gDirectionAng, gAngleYZ);
     };
     void Move(GLfloat deltaTime);
-    void DrawFireball(GLfloat x0, GLfloat x1, GLfloat x2, 
-                      GLfloat y0, GLfloat y1, GLfloat y2, 
-                      GLfloat z0, GLfloat z1, GLfloat z2, 
+    void DrawFireball(GLfloat x0, GLfloat y0, GLfloat z0, 
+                      GLfloat x1, GLfloat y1, GLfloat z1, 
+                      GLfloat x2, GLfloat y2, GLfloat z2, 
                       GLfloat directionAng, GLfloat angleYZ);
     bool DetectBulletCollision(Platform *element, int len, GLfloat gXpos, GLfloat pos);
     bool DetectBackground(Platform *element, int len, GLfloat gXpos, GLfloat pos);
     void GetPos(GLfloat &xOut, GLfloat &yOut, GLfloat &zOut)
     {
         if (cos((gDirectionAng * M_PI)/180)/abs(cos((gDirectionAng * M_PI)/180)) >= 0){
-            xOut = playerPosX + gY[2];
+            xOut = playerPosX + gX[2];
         }
         else{
-            xOut = playerPosX - gY[2];
+            xOut = playerPosX - gX[2];
         }
-        yOut = gY[1] + playerPosY;
+        yOut = gY[2] + playerPosY;
         zOut = gZ[2] + playerPosZ;
     };
 
@@ -181,7 +182,7 @@ public:
         // glPushMatrix();
         // glTranslatef(0,0,0);
         // printf("Dist: %f\n", sqrt(pow((gY[0] - gXInit), 2) + pow((gY[1] - gYInit), 2)));
-        GLfloat result = sqrt(pow((gY[0] - gXInit), 2) + pow((gY[1] - gYInit), 2));
+        GLfloat result = sqrt(pow((gX[2] - gXInit), 2) + pow((gY[2] - gYInit), 2) + pow((gZ[2] - gZInit), 2));
         // glPopMatrix();
         return result;   
     };
