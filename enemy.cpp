@@ -205,11 +205,11 @@ bool Enemy::GravityEffect(GLfloat delta, GLdouble deltaTime)
     dz = sin(degreeToRadEnemy(direction)) * delta;
 
 
-    if(ground < gY)
+    if(ground < gY-percentual*deltaTime)
     {
         gY -= percentual*deltaTime;
-        gX += (dx/9)*percentual*deltaTime;
-        gZ -= (dz/9)*percentual*deltaTime;
+        // gX += (dx/9)*percentual*deltaTime;
+        // gZ -= (dz/9)*percentual*deltaTime;
         return true;
     }
     else
@@ -274,13 +274,11 @@ GLint Enemy::DetectGround(Platform *platforms, int len, GLfloat pos)
 
     for (int i = 0; i < len; i++)
     {
-        GLfloat y = - (platforms[i].GetY() - pos);
+        // GLfloat y = - (platforms[i].GetY() - pos);
+        // printf("sqrt(pow((gY - (radius*2)) - platforms[i].GetY(),2)): %f \n (radius*4): %f \n", sqrt(pow((gY - (radius*2)) - platforms[i].GetY(),2)), (radius*4));
+
         if(((gX+(2*radius) > platforms[i].GetX()) && (gX-(2*radius) < (platforms[i].GetX() + platforms[i].GetW()))) &&
-            sqrt(pow((gY - (radius*2)) - y,2)) <= (radius*4))
-        // if(((gX-radius*2 >= platforms[i].GetX()) && 
-        //     (gX+radius*2 <= (platforms[i].GetX() + platforms[i].GetW()))) &&
-        //     // gY - legHeight/4 >= y)
-        //     sqrt(pow((gY + legHeight) - platforms[i].GetY(),2)) <= legHeight)
+           sqrt(pow((gY + (radius*2)) - platforms[i].GetY(),2)) <= (radius*4))
         {
             if (ground <= platforms[i].GetY())
             {
@@ -303,7 +301,7 @@ bool Enemy::DetectCollision(Platform *platforms, int len, GLfloat pos)
         {   
             y = - (platforms[i].GetY() - pos);
             
-            if (((gY - legHeight/4 <= y) &&  (gY + legHeight/4 >= (y - platforms[i].GetH()))))
+            if (((gY - (radius/2) <= y) &&  (gY + (radius/2) >= (y - platforms[i].GetH()))))
             {
                 if((gX+radius*2 >= platforms[i].GetX()) && gX+radius*2 < (platforms[i].GetX() + platforms[i].GetW()) &&
                     gX+radius*2 <= platforms[i].GetX() + (platforms[i].GetW()/4))
@@ -314,7 +312,7 @@ bool Enemy::DetectCollision(Platform *platforms, int len, GLfloat pos)
                 else if((gX-radius*2 > platforms[i].GetX()) && gX-radius*2 <= (platforms[i].GetX() + platforms[i].GetW()) &&
                     gX-radius*2 > platforms[i].GetX() + (platforms[i].GetW()/2) + (platforms[i].GetW()/4))
                 {
-                    gX= platforms[i].GetX() + (platforms[i].GetW() +radius*2);
+                    gX= platforms[i].GetX() + (platforms[i].GetW() + radius*2);
                     return true;
                 }
             }

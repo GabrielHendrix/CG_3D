@@ -517,23 +517,67 @@ void renderScene(void)
           // glClearColor (0.0,0.0,0.0,1.0);
           glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
           
-          //Utiliza uma esfera de raio zoom para guiar a posicao da camera
-          //baseada em dois angulos (do plano XZ e do plano XY)
-          // gluLookAt( sin(camXZAngle*M_PI/180)*cos((camXYAngle*M_PI/180)),
-          //                                    sin((camXYAngle*M_PI/180)),
-          //           cos(camXZAngle*M_PI/180)*cos((camXYAngle*M_PI/180)),
-          //           0, 0, 0,
+
+          // gluLookAt(player.vecMeshes[player.currentMovID][player.currentFrame].vertsPos[8317].x * player.GetRadius() * 2,
+          //           player.GetY() + player.vecMeshes[player.currentMovID][player.currentFrame].vertsPos[8317].y * player.GetRadius() * 2,
+          //           player.vecMeshes[player.currentMovID][player.currentFrame].vertsPos[8317].z * player.GetRadius() * 2,
+          //           player.vecMeshes[player.currentMovID][player.currentFrame].vertsPos[8083].x * player.GetRadius() * 2,
+          //           player.GetY() + player.vecMeshes[player.currentMovID][player.currentFrame].vertsPos[8083].y * player.GetRadius() * 2,
+          //           player.vecMeshes[player.currentMovID][player.currentFrame].vertsPos[8083].z * player.GetRadius() * 2,
           //           0, 1, 0);
-  
+          // GLfloat mT[4][4] = {1,0,0,0,
+          //                     0,1,0,0,
+          //                     0,0,1,0,
+          //                     0,0,player.GetZ(),1};
+          // glMultMatrixf(&mT[0][0]);
+
+          // GLfloat m[4][4] = { (GLfloat)cos(degToRad(player.GetHDirection())),0,(GLfloat)sin(degToRad(player.GetHDirection())),0,
+          //                     0,1,0,0,
+          //                     (GLfloat)-sin(degToRad(player.GetHDirection())),0,(GLfloat)cos(degToRad(player.GetHDirection())),0,
+          //                     0, 0, 0, 1};
+          // glMultMatrixf(&m[0][0]);
+          // glRotatef(90, 0, 1, 0);
           
-          gluLookAt(-ViewingHeight/4, 0, 0,//-ViewingHeight/4,
-                    ViewingHeight/2, 0, 0,
+          gluLookAt(0, 0, 0,//-ViewingHeight/4,
+                    ViewingHeight, 0, 0,
                     0, 1, 0);
+          glRotatef(player.GetHDirection(),0,1,0);
+          glRotatef(2,0,0,1);
+          glTranslatef(0, -(player.GetY() + player.GetRadius()*(20/3)),-player.GetZ()); 
+          // glTranslatef(0,-player.GetY(),-player.GetZ());
+          // gluLookAt(-ViewingHeight/4, 0, 0,//-ViewingHeight/4,
+          //           ViewingHeight/2, 0, 0,
+          //           0, 1, 0);
           
-          glRotatef((int)camXZAngle,0,0,1);
-          glRotatef((int)camXYAngle,0,1,0);
-          glTranslatef(0,-(player.GetY()+player.GetPlayerCamHeight()),-player.GetZ());
-       
+          // glRotatef((int)camXZAngle,0,0,1);
+          // glRotatef((int)camXYAngle,0,1,0);
+          // glTranslatef(0,-(player.GetY()+player.GetPlayerCamHeight()),-player.GetZ());
+
+          // glPushMatrix();
+          //      GLfloat mT[4][4] = { 1,0,0,0,
+          //                          0,1,0,0,
+          //                          0,0,1,0,
+          //                          0,0,player.GetZ(),1};
+          //      glMultMatrixf(&mT[0][0]);
+
+          //      GLfloat m[4][4] = { (GLfloat)cos(degToRad(player.GetHDirection())),0,(GLfloat)sin(degToRad(player.GetHDirection())),0,
+          //                          0,1,0,0,
+          //                          (GLfloat)-sin(degToRad(player.GetHDirection())),0,(GLfloat)cos(degToRad(player.GetHDirection())),0,
+          //                          0, 0, 0, 1};
+          //      glMultMatrixf(&m[0][0]);
+          //      // glRotatef(player.GetHDirection(), 0, 1, 0);
+          //      glRotatef(90, 0, 1, 0);
+
+          //      // glTranslatef(0, player.GetY(), 0);
+          //      // glTranslatef(0,0,(player.GetZ() + player.vecMeshes[player.currentMovID][player.currentFrame].vertsPos[8317].z * player.GetRadius() * 2));
+               
+          //      // glRotatef(-player.GetHDirection(), 0,1,0);
+          //      // glRotatef(90,0,1,0);
+          //      glTranslatef(player.vecMeshes[player.currentMovID][player.currentFrame].vertsPos[8317].x * player.GetRadius() * 2,
+          //                  (player.GetY() + player.vecMeshes[player.currentMovID][player.currentFrame].vertsPos[8317].y * player.GetRadius() * 2),
+          //                  player.vecMeshes[player.currentMovID][player.currentFrame].vertsPos[8317].z * player.GetRadius() * 2);
+          //      glutSolidCube(1);
+          // glPopMatrix();
           GLfloat light_position[] = {0, 140, -20, 1};
           glLightfv(GL_LIGHT0,GL_POSITION,light_position); //GL_SPOT_DIRECTION GL_POSITION
 
@@ -607,22 +651,29 @@ void renderScene(void)
                          
                          glScalef(player.GetRadius()*2, player.GetRadius()*2, player.GetRadius()*2);
                          // glRotatef(player.GetHDirection(), 0, 1, 0);
+                         // glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
                          drawPlayer();
+                         // glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+
                          // printf("hDirection: %d\n", player.GetHDirection());
                          if(firing)
                          {
+                              // player.SetPosArm(playerArm.vertsPos[661].x,
+                              //                  playerArm.vertsPos[661].y,
+                              //                  playerArm.vertsPos[661].z);
+                              // glTranslatef(0,-(player.GetY() + player.GetRadius()*(20/3)),-player.GetZ());
                               player.SetPosArm(playerArm.vertsPos[661].x,
                                                playerArm.vertsPos[661].y,
                                                playerArm.vertsPos[661].z);
-                              glTranslatef(player.vecMeshes[player.currentMovID][player.currentFrame].vertsPos[13704].x,
-                                           player.vecMeshes[player.currentMovID][player.currentFrame].vertsPos[13704].y,
-                                           player.vecMeshes[player.currentMovID][player.currentFrame].vertsPos[13704].z);
+                              glTranslatef(player.vecMeshes[player.currentMovID][player.currentFrame].vertsPos[16770].x,  //13704
+                                           player.vecMeshes[player.currentMovID][player.currentFrame].vertsPos[16770].y,  //13704
+                                           player.vecMeshes[player.currentMovID][player.currentFrame].vertsPos[16770].z);  //13704;
                               glRotatef(-90, 0, 1, 0);
                               glRotatef(player.GetArmAngle()+90, 0, 0, 1);
                               playerArm.draw();
                          }
                              
-                         DrawAxes(2);
+                         // DrawAxes(2);
                     glPopMatrix();
                     for (int i = 0; i < numberOfEnemies; i++)
                     {  
@@ -646,14 +697,14 @@ void renderScene(void)
                          }
                     }
 
-                    glDisable(GL_LIGHTING);
-                    glDisable(GL_LIGHT0);
-                    glDisable(GL_DEPTH_TEST);
-                         PrintLife(-ViewingWidth/2 + 20, ViewingHeight/2 - 10);
-                         PrintScore(5, ViewingHeight/2 - 5);
-                    glEnable(GL_LIGHTING);
-                    glEnable(GL_LIGHT0);
-                    glEnable(GL_DEPTH_TEST); 
+                    // glDisable(GL_LIGHTING);
+                    // glDisable(GL_LIGHT0);
+                    // glDisable(GL_DEPTH_TEST);
+                    //      PrintLife(-ViewingWidth/2 + 20, ViewingHeight/2 - 10);
+                    //      PrintScore(5, ViewingHeight/2 - 5);
+                    // glEnable(GL_LIGHTING);
+                    // glEnable(GL_LIGHT0);
+                    // glEnable(GL_DEPTH_TEST); 
                }
                glutSwapBuffers(); 
           }
@@ -1140,8 +1191,8 @@ void idle(void)
                          enemyGnd = background[0].GetH()/2;
                     }
                     enemiesPointer[i].SetGround(-enemyGnd, gndIsPlat, detectedEnemyGnd);
-                    enemiesPointer[i].SetY(enemyGnd);
-                    // enemiesPointer[i].GravityEffect(0,timeDiference);
+                    // enemiesPointer[i].SetY(enemyGnd);
+                    enemiesPointer[i].GravityEffect(0,timeDiference);
                }
                // Control animationb
                if (enemiesPointer[i].DetectCollision(&platforms[0], 
@@ -1239,7 +1290,7 @@ void changeCamera(int angle, int w, int h)
     
 //     gluLookAt(1,2,5, 0,0,0, 0,1,0);
     gluPerspective (angle, 
-            (GLfloat)w / (GLfloat)h, 1, 150.0);
+            (GLfloat)w / (GLfloat)h, 1.8, 150.0);
 
     glMatrixMode (GL_MODELVIEW);
 }
