@@ -34,7 +34,7 @@ typedef struct VERTICE_STRIP{
 } verticeStrip;
 
 class Player {
-    GLint hDirection;
+    GLint hDirection, type;
     GLfloat gX, gY, gZ, radius, gTheta0, gTheta1, gTheta01, gTheta11, gThetaWheel, armAngle, time, posArmX, posArmY, posArmZ; 
     GLfloat direction, inc0, inc1, inc01, inc11, gThetaJump0, gThetaJump1, gThetaJump01, radiusWheel, ground;
     GLfloat gThetaJump11, percentual, legHeight, memberWidth, paddleHeight, paddleWidth, baseHeight, baseWidth;
@@ -90,6 +90,7 @@ class Player {
             texID = -1;
             currentMovID = -1;
             currentFrame = -1;
+            type = 1;
             vecMeshes.clear();
         };
         ~Player(){
@@ -152,6 +153,9 @@ class Player {
         };
         GLint GetHDirection(){
             return hDirection;
+        };
+        void SetCam(GLint t){
+            type = t;
         };
         void SetTime(GLfloat t){
             time = t;

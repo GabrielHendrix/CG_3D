@@ -139,4 +139,5 @@ bool mesh::loadText(string path){
                                                //as unsigned numbers
                              image->pixels);               //The actual pixel data
     delete image;
+    return true;
 }

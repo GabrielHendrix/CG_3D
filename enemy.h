@@ -48,7 +48,7 @@ class meshEnemy{
 class Enemy {
 
     GLint hDirection, detectedEnemyGnd;
-    GLfloat gX, gY,gZ, radius, gTheta0, gTheta1, gTheta01, gTheta11, gThetaWheel, armAngle, time; 
+    GLfloat gX, gY,gZ, radius, gTheta0, gTheta1, gTheta01, gTheta11, gThetaWheel, armAngle, time, posArmX, posArmY, posArmZ; 
     GLfloat direction, inc, inc0, inc1, inc01, inc11, gThetaJump0, gThetaJump1, gThetaJump01, radiusWheel, ground;
     GLfloat gThetaJump11, percentual, legHeight, memberWidth, paddleHeight, paddleWidth, baseHeight, baseWidth;
     Fireball* t;
@@ -67,7 +67,10 @@ class Enemy {
         {
             gX = x; 
             gY = y; 
-            gZ= z;
+            gZ = z;
+            posArmX = 0;
+            posArmY = 0;
+            posArmZ = 0;
             inc = 1;
             t = NULL;
             fireballOn = false;
@@ -162,6 +165,12 @@ class Enemy {
         GLint GetInc(){
             return inc;
         };
+        GLint GetHDirection(){
+            return hDirection;
+        };
+        GLfloat GetArmAngle(){
+            return armAngle;
+        }
         bool GetDefeatState(){
             return defeat;
         };
@@ -180,11 +189,19 @@ class Enemy {
         void SetZ(GLfloat z){
             gZ = z;
         };
+        void SetHDirection(GLfloat angle){
+            direction = angle;
+        };
         void SetArmAngle(GLfloat angle){
             armAngle = angle;
         };
         void SetDefeatState(bool state){
             defeat = state;
+        };
+        void SetPosArm(GLfloat x, GLfloat y, GLfloat z){
+            posArmX = x;
+            posArmY = y;
+            posArmZ = z;
         };
         void SetGround(GLfloat gnd, bool isPlat, GLint detectedGnd){
             ground = gnd;
@@ -194,6 +211,15 @@ class Enemy {
         };
         bool GetGroundState(){
             return groundDefined;
+        };
+        GLfloat GetPosArmX(){
+            return posArmX;
+        };
+        GLfloat GetPosArmY(){
+            return posArmY;
+        };
+        GLfloat GetPosArmZ(){
+            return posArmZ;
         };
         GLfloat GetRadius(){
             return radius;

@@ -54,16 +54,21 @@ int aux2, incJump, atingido, incAir, incAirControl, numberOfEnemies, numberOfPla
 Enemy* enemiesPointer;
 GLint collisionDetect, aux, bgDetect, damage, ind, ViewingWidth, ViewingHeight, ground;
 GLfloat shootAngle, previousGround, newGround, jumpSize, deltaX, mousePosY, detectedEnemyGnd, enemyGnd;
-mesh playerArm;
-
+mesh playerArm, enemyArm[99];
+int camType = 0;
+GLfloat dir = 0;
 //ID das meshes lidas
 int movIdle = -1;
 int movIdleFire = -1;
 int movRunFire = -1;
-int movRunEnemy[9999];
+int movRunEnemy[99];
 int movPunch = -1;
 int movRun = -1;
 int movDance = -1;
+int movIdleNoHead = -1; 
+int movIdleFireNoHead = -1;
+int movRunNoHead = -1;
+int movRunFireNoHead = -1;  
 //Controles dos golpes
 int running = 0;
 int fire = 0;
@@ -81,19 +86,39 @@ void drawPlayer(){
      
      //Escolhe entre iniciar o desenho do chute ou soco
      if (!fire && running && !acting){
-          player.drawInit(movRun);
+          if(camType == 0){
+               player.drawInit(movRun);
+          }
+          else if(camType == 1 || camType == 2){
+               player.drawInit(movRunNoHead);
+          }
           acting = 1;
      }
      else if (fire && running && !acting){
-          player.drawInit(movRunFire);
+          if(camType == 0){
+               player.drawInit(movRunFire);
+          }
+          else if(camType == 1 || camType == 2){
+               player.drawInit(movRunFireNoHead);
+          }
           acting = 1;
      }
      else if(!running && fire && !acting){
-          player.drawInit(movIdleFire);
+          if(camType == 0){
+               player.drawInit(movIdleFire);
+          }
+          else if(camType == 1 || camType == 2){
+               player.drawInit(movIdleFireNoHead);
+          }
           acting = 1;
      }
      else if(!fire && !running && acting){
-          player.drawInit(movIdle);
+          if(camType == 0){
+               player.drawInit(movIdle);
+          }
+          else if(camType == 1 || camType == 2){
+               player.drawInit(movIdleNoHead);
+          }
           acting = 0;
      }
      // if (!running && !acting){
@@ -113,16 +138,36 @@ void drawPlayer(){
      //Reinicia com o movimento de parado esperando a luta
      if (rtn){
           if(fire && !running){
-               player.drawInit(movIdleFire);
+               if(camType == 0){
+                    player.drawInit(movIdleFire);
+               }
+               else if(camType == 1 || camType == 2){
+                    player.drawInit(movIdleFireNoHead);
+               }
           }
           else if(fire && running){
-               player.drawInit(movRunFire);
+               if(camType == 0){
+                    player.drawInit(movRunFire);
+               }
+               else if(camType == 1 || camType == 2){
+                    player.drawInit(movRunFireNoHead);
+               }
           }
           else if(!fire && running){
-               player.drawInit(movRun);
+               if(camType == 0){
+                    player.drawInit(movRun);
+               }
+               else if(camType == 1 || camType == 2){
+                    player.drawInit(movRunNoHead);
+               }
           }
           else{
-               player.drawInit(movIdle);
+               if(camType == 0){
+                    player.drawInit(movIdle);
+               }
+               else if(camType == 1 || camType == 2){
+                    player.drawInit(movIdleNoHead);
+               }
           }
           acting = 0;
           punching = 0;
@@ -157,6 +202,7 @@ void InitGame(const std::string arg)
      incJump = 0;
      atingido = 0;
      incAir = 0;
+     dir = 0;
      ind = 0;
      incAirControl = 0;
      numberOfEnemies = CalculatesNumberOfEnemies();
@@ -177,6 +223,7 @@ void InitGame(const std::string arg)
      newGround = background[0].GetH()/2;
      jumpSize = 0;
      deltaX = 0;
+     camType = 0;
      shootAngle = 0.0;
      mousePosY = 0;
      collisionDetect = 2;
@@ -336,7 +383,7 @@ int CalculatesLocationAndSizeOfPlayer()
                          }
                          if (fill == "red")
                          {
-                              enemies.push_back(Enemy(StringToInt(cx), StringToInt(cy), 0, (StringToInt(radius)*3)/130.0, StringToInt(radius)*0.3));
+                              enemies.push_back(Enemy(StringToInt(cx), StringToInt(cy), -ViewingHeight/4, (StringToInt(radius)*3)/130.0, StringToInt(radius)*0.3));
                          }
                     }
                }
@@ -537,22 +584,31 @@ void renderScene(void)
           //                     0, 0, 0, 1};
           // glMultMatrixf(&m[0][0]);
           // glRotatef(90, 0, 1, 0);
-          
-          gluLookAt(0, 0, 0,//-ViewingHeight/4,
-                    ViewingHeight, 0, 0,
-                    0, 1, 0);
-          glRotatef(player.GetHDirection(),0,1,0);
-          glRotatef(2,0,0,1);
-          glTranslatef(0, -(player.GetY() + player.GetRadius()*(20/3)),-player.GetZ()); 
+          if(camType == 1 || camType == 2){
+               gluLookAt(0, 0, 0,//-ViewingHeight/4,
+                         ViewingHeight, 0, 0,
+                         0, 1, 0);
+               
+               if(camType == 2){
+                    // glRotatef(-90,0,0,1);
+                    glRotatef((-player.GetArmAngle()-80),0,0,1);
+               }
+               else{
+                    glRotatef(2,0,0,1);
+               }
+               glRotatef(player.GetHDirection(),0,1,0);
+               glTranslatef(0, -(player.GetY() + player.GetRadius()*(18/3)),-player.GetZ());
+          }
+          else if(camType == 0){
+               gluLookAt(-ViewingHeight/4, 0, 0,//-ViewingHeight/4,
+                         ViewingHeight/2, 0, 0,
+                         0, 1, 0);
+               glRotatef((int)camXZAngle,0,0,1);
+               glRotatef((int)camXYAngle,0,1,0);
+               glTranslatef(0,-(player.GetY()+player.GetPlayerCamHeight()),-player.GetZ());
+          }
           // glTranslatef(0,-player.GetY(),-player.GetZ());
-          // gluLookAt(-ViewingHeight/4, 0, 0,//-ViewingHeight/4,
-          //           ViewingHeight/2, 0, 0,
-          //           0, 1, 0);
-          
-          // glRotatef((int)camXZAngle,0,0,1);
-          // glRotatef((int)camXYAngle,0,1,0);
-          // glTranslatef(0,-(player.GetY()+player.GetPlayerCamHeight()),-player.GetZ());
-
+     
           // glPushMatrix();
           //      GLfloat mT[4][4] = { 1,0,0,0,
           //                          0,1,0,0,
@@ -652,22 +708,27 @@ void renderScene(void)
                          glScalef(player.GetRadius()*2, player.GetRadius()*2, player.GetRadius()*2);
                          // glRotatef(player.GetHDirection(), 0, 1, 0);
                          // glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
-                         drawPlayer();
+                         if(camType!=2){
+                              drawPlayer();  
+                         }
                          // glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
 
                          // printf("hDirection: %d\n", player.GetHDirection());
                          if(firing)
                          {
-                              // player.SetPosArm(playerArm.vertsPos[661].x,
-                              //                  playerArm.vertsPos[661].y,
-                              //                  playerArm.vertsPos[661].z);
-                              // glTranslatef(0,-(player.GetY() + player.GetRadius()*(20/3)),-player.GetZ());
                               player.SetPosArm(playerArm.vertsPos[661].x,
                                                playerArm.vertsPos[661].y,
                                                playerArm.vertsPos[661].z);
-                              glTranslatef(player.vecMeshes[player.currentMovID][player.currentFrame].vertsPos[16770].x,  //13704
-                                           player.vecMeshes[player.currentMovID][player.currentFrame].vertsPos[16770].y,  //13704
-                                           player.vecMeshes[player.currentMovID][player.currentFrame].vertsPos[16770].z);  //13704;
+                              if(camType == 2){
+                                   glTranslatef(0,  //13704
+                                                player.GetRadius() * 6.5 * 0.3,  //13704
+                                                0);  //13704;    
+                              }
+                              else{
+                                   glTranslatef(player.vecMeshes[player.currentMovID][player.currentFrame].vertsPos[13704].x,  //13704
+                                                player.vecMeshes[player.currentMovID][player.currentFrame].vertsPos[13704].y,  //13704
+                                                player.vecMeshes[player.currentMovID][player.currentFrame].vertsPos[13704].z);  //13704;
+                              }
                               glRotatef(-90, 0, 1, 0);
                               glRotatef(player.GetArmAngle()+90, 0, 0, 1);
                               playerArm.draw();
@@ -680,20 +741,52 @@ void renderScene(void)
                          if(!enemiesPointer[i].GetDefeatState())
                          {
                               glPushMatrix(); 
-                              glTranslatef(enemiesPointer[i].GetX() - player.GetX(), enemiesPointer[i].GetY(),-ViewingHeight/4);
-                                   drawEnemy(i);
+                                   GLfloat mT[4][4] = { 1,0,0,0,
+                                                       0,1,0,0,
+                                                       0,0,1,0,
+                                                       enemiesPointer[i].GetX() - player.GetX(),0,enemiesPointer[i].GetZ(),1};
+                                   glMultMatrixf(&mT[0][0]);
+
+                                   GLfloat m[4][4] = { (GLfloat)cos(degToRad(enemiesPointer[i].GetHDirection())),0,(GLfloat)sin(degToRad(enemiesPointer[i].GetHDirection())),0,
+                                                  0,1,0,0,
+                                                  (GLfloat)-sin(degToRad(enemiesPointer[i].GetHDirection())),0,(GLfloat)cos(degToRad(enemiesPointer[i].GetHDirection())),0,
+                                                  0, 0, 0, 1};
+                                   glMultMatrixf(&m[0][0]);
+                                   // glRotatef(player.GetHDirection(), 0, 1, 0);
+                                   glRotatef(90, 0, 1, 0);
+
+                                   glTranslatef(0, enemiesPointer[i].GetY(), 0);
+                                   
+                                   glScalef(enemiesPointer[i].GetRadius()*2, enemiesPointer[i].GetRadius()*2, enemiesPointer[i].GetRadius()*2);
+                  
+                                   drawEnemy(i);  
+
+                                   enemiesPointer[i].SetPosArm(enemyArm[i].vertsPos[661].x,
+                                                               enemyArm[i].vertsPos[661].y,
+                                                               enemyArm[i].vertsPos[661].z);
+                           
+                                   glTranslatef(enemiesPointer[i].vecMeshes[enemiesPointer[i].currentMovID][enemiesPointer[i].currentFrame].vertsPos[13704].x,  //13704
+                                                  enemiesPointer[i].vecMeshes[enemiesPointer[i].currentMovID][enemiesPointer[i].currentFrame].vertsPos[13704].y,  //13704
+                                                  enemiesPointer[i].vecMeshes[enemiesPointer[i].currentMovID][enemiesPointer[i].currentFrame].vertsPos[13704].z);  //13704;
+                    
+                                   glRotatef(-90, 0, 1, 0);
+                                   glRotatef(enemiesPointer[i].GetArmAngle(), 0, 0, 1);
+                                   enemyArm[i].draw();
+
+                              // glTranslatef(enemiesPointer[i].GetX() - player.GetX(), enemiesPointer[i].GetY(),enemiesPointer[i].GetZ());
+                              //      drawEnemy(i);
                                    // glPushMatrix(); 
                                    //      glTranslatef(0, player.GetRadius()/2,0);
                                    //      glutSolidCube(player.GetRadius()/2);
                                    // glPopMatrix();
-                                   enemiesPointer[i].SetZ(-ViewingHeight/4);
+                                   // enemiesPointer[i].SetZ(-ViewingHeight/4);
                               glPopMatrix();
-                              glPushMatrix(); 
-                              glTranslatef((enemiesPointer[i].GetX() + (enemiesPointer[i].GetRadius()/2)) - player.GetX(), 
-                                           (enemiesPointer[i].GetY()+(player.GetRadius()*4)), 
-                                           -ViewingHeight/4 + (enemiesPointer[i].GetRadius()/2));
-                                   glutSolidCube(player.GetRadius());
-                              glPopMatrix();
+                              // glPushMatrix(); 
+                              // glTranslatef((enemiesPointer[i].GetX() + (enemiesPointer[i].GetRadius()/2)) - player.GetX(), 
+                              //              (enemiesPointer[i].GetY()+(player.GetRadius()*4)), 
+                              //              -ViewingHeight/4 + (enemiesPointer[i].GetRadius()/2));
+                              //      glutSolidCube(player.GetRadius());
+                              // glPopMatrix();
                          }
                     }
 
@@ -752,6 +845,10 @@ void keyPress(unsigned char key, int x, int y)
           case 'R':
                keyStatus[(int)('r')] = 1; //Using keyStatus trick
                break;
+          case 'q':
+          case 'Q':
+               keyStatus[(int)('q')] = 1; //Using keyStatus trick
+               break;
           case 't':
           case 'T':
                keyStatus[(int)('t')] = 1; //Using keyStatus trick
@@ -763,6 +860,12 @@ void keyPress(unsigned char key, int x, int y)
           case 'y':
           case 'Y':
                keyStatus[(int)('y')] = 1; //Using keyStatus trick
+               break;
+          case '0':
+               keyStatus[(int)('0')] = 1; //Using keyStatus trick
+               break;
+          case '1':
+               keyStatus[(int)('1')] = 1; //Using keyStatus trick
                break;
           case '2':
                keyStatus[(int)('2')] = 1; //Using keyStatus trick
@@ -890,6 +993,10 @@ void init(void)
      movIdleFire =  player.loadMeshAnim("Blender/megaman_idle_fire/megaman_idle_fire_######.obj", 14);
      movRun =  player.loadMeshAnim("Blender/megaman_run/megaman_run_######.obj", 12);
      movRunFire =  player.loadMeshAnim("Blender/megaman_run_fire/megaman_run_fire_######.obj", 12);
+     movIdleNoHead =  player.loadMeshAnim("Blender/megaman_idle_no_head/megaman_idle_no_head_######.obj", 14);
+     movIdleFireNoHead =  player.loadMeshAnim("Blender/megaman_idle_fire_no_head/megaman_idle_fire_no_head_######.obj", 14);
+     movRunNoHead =  player.loadMeshAnim("Blender/megaman_run_no_head/megaman_run_no_head_######.obj", 12);
+     movRunFireNoHead =  player.loadMeshAnim("Blender/megaman_run_fire_no_head/megaman_run_fire_no_head_######.obj", 12);
      playerArm.loadMesh("Blender/megaman_idle_fire_arm.obj");
      playerArm.loadText("Blender/megaman_arm_color.bmp");
      player.loadTexture("Blender/megaman_texture.bmp");
@@ -899,8 +1006,10 @@ void init(void)
      // movIdleEnemy =  enemy.loadMeshAnim("Blender/megaman_idle/megaman_idle_######.obj", 14);
      for (int i = 0; i < numberOfEnemies; i++)
      {  
-          movRunEnemy[i] =  enemiesPointer[i].loadMeshAnim("Blender/megaman_run/megaman_run_######.obj", 12);
+          movRunEnemy[i] =  enemiesPointer[i].loadMeshAnim("Blender/megaman_run_fire/megaman_run_fire_######.obj", 12);
           enemiesPointer[i].loadTexture("Blender/megaman_texture.bmp");
+          enemyArm[i].loadMesh("Blender/megaman_idle_fire_arm.obj");
+          enemyArm[i].loadText("Blender/megaman_arm_color.bmp");  
           enemiesPointer[i].drawInit(movRunEnemy[i]);
      }
      // glMatrixMode(GL_PROJECTION); // Select the projection matrix    
@@ -949,22 +1058,31 @@ void idle(void)
           //Treat keyPress
           fireball = player.GetFireball();
     
-          // if((currentTime - deltaShoot) > 3000)
-          // {
-          //      deltaShoot = glutGet(GLUT_ELAPSED_TIME);
-          //      ind = player.DetectDistance(&enemiesPointer[0], numberOfEnemies);
-          //      shootAngle = atanf((player.GetY() -  enemiesPointer[ind].GetY())/sqrt(pow(player.GetX() - enemiesPointer[ind].GetX(), 2))) * (180/M_PI);
-          //      enemiesPointer[ind].SetArmAngle(shootAngle);
-          //      enemiesPointer[ind].Aiming(true);
-          // }
-          // if((currentTime - deltaTimeShoot) > 1000 && !fireballEnemy && !enemiesPointer[ind].GetDefeatState())
-          // {
-          //      deltaTimeShoot = glutGet(GLUT_ELAPSED_TIME);
-          //      enemiesPointer[ind].SetArmAngle(shootAngle);
+          if((currentTime - deltaShoot) > 3000)
+          {
+               deltaShoot = glutGet(GLUT_ELAPSED_TIME);
+               ind = player.DetectDistance(&enemiesPointer[0], numberOfEnemies);
+               shootAngle = atanf((player.GetY() -  enemiesPointer[ind].GetY())/sqrt(pow(player.GetX() - enemiesPointer[ind].GetX(), 2))) * (180/M_PI);
+               dir = atanf((player.GetZ() -  enemiesPointer[ind].GetZ())/sqrt(pow(player.GetX() - enemiesPointer[ind].GetX(), 2))) * (180/M_PI);
+               // printf("x: %f\n",player.GetX() - enemiesPointer[ind].GetX()/player.GetX() - enemiesPointer[ind].GetX());
+               // printf("z: %f\n",player.GetZ() - enemiesPointer[ind].GetZ()/player.GetZ() - enemiesPointer[ind].GetZ());
+               // printf("%f\n", dir);
+               if(player.GetX() - enemiesPointer[ind].GetX() < 0 && dir > 0)
+                    dir = 180 - dir;
+               if(player.GetX() - enemiesPointer[ind].GetX() > 0 && dir < 0)
+                    dir = 360 + dir;
+               enemiesPointer[ind].SetHDirection(dir);
+               enemiesPointer[ind].SetArmAngle(shootAngle);
+               enemiesPointer[ind].Aiming(true);
+          }
+          if((currentTime - deltaTimeShoot) > 1000 && !fireballEnemy && !enemiesPointer[ind].GetDefeatState())
+          {
+               deltaTimeShoot = glutGet(GLUT_ELAPSED_TIME);
+               enemiesPointer[ind].SetArmAngle(shootAngle);
                
-          //      enemiesPointer[ind].Atira();
-          //      fireballEnemy = enemiesPointer[ind].GetFireball();               
-          // }
+               enemiesPointer[ind].Atira();
+               fireballEnemy = enemiesPointer[ind].GetFireball();               
+          }
           auxGround = player.DetectGround(&platforms[0], &enemiesPointer[0], numberOfPlatforms, numberOfEnemies, background[0].GetY() + (background[0].GetH()/2));
           collisionDetect = player.DetectCollision(&platforms[0], &enemiesPointer[0], numberOfPlatforms, numberOfEnemies, background[0].GetY() +  (background[0].GetH()/2));
           bgDetect = player.DetectBackground(&background[0], 1, background[0].GetY() + (background[0].GetH()/2));
@@ -972,7 +1090,7 @@ void idle(void)
           {
                // printf("background[0].GetY(): %f\n", background[0].GetY());
                // printf("ViewingWidth/2: %f\n", ViewingWidth/2);
-               newGround = auxGround - (background[0].GetY() + (background[0].GetH()/2));
+               newGround = auxGround;
           }
           else
           {
@@ -981,6 +1099,21 @@ void idle(void)
           player.SetGround(-newGround);
           if(updateDrawing)
           {
+               if(keyStatus[(int)('0')])
+               {
+                    camType = 0;
+                    player.SetCam(0);
+               }
+               if(keyStatus[(int)('1')])
+               {
+                    camType = 1;
+                    player.SetCam(0);
+               }
+               if(keyStatus[(int)('q')])
+               {
+                    camType = 2;
+                    player.SetCam(1);
+               }
                if(keyStatus[(int)('2')])
                {
                     if(camXZAngle > -60)
@@ -1192,29 +1325,35 @@ void idle(void)
                     }
                     enemiesPointer[i].SetGround(-enemyGnd, gndIsPlat, detectedEnemyGnd);
                     // enemiesPointer[i].SetY(enemyGnd);
-                    enemiesPointer[i].GravityEffect(0,timeDiference);
                }
                // Control animationb
-               if (enemiesPointer[i].DetectCollision(&platforms[0], 
+               if ((enemiesPointer[i].DetectCollision(&platforms[0], 
                                              numberOfPlatforms, 
-                                             background[0].GetY() + (ViewingWidth/2)) || 
+                                             background[0].GetY()  + (background[0].GetH()/2)) || 
                                              enemiesPointer[i].DetectBackground(&background[0], 
                                              1, 
-                                             background[0].GetY() + (background[0].GetH()/2)) && 
+                                             background[0].GetY() + (background[0].GetH()/2)) ||  (enemiesPointer[i].GetZ() > 0 || enemiesPointer[i].GetZ() < -ViewingHeight/2)) && 
                                              !enemiesPointer[i].GetDefeatState())
                {
-                    enemiesPointer[i].SetInc(-1);
+                    if(i != ind)
+                         enemiesPointer[i].SetInc(-1);
+                    if(i == ind && (enemiesPointer[i].GetZ() > 0 || enemiesPointer[i].GetZ() < -ViewingHeight/2))
+                    {
+                         printf("z: %f\n",player.GetZ());
+                         printf("-ViewingHeight/2: %d\n",-ViewingHeight/2);
+                         
+                         enemiesPointer[i].SetHDirection(dir + 180);
+                    }    
                }
                
-               if(collisionDetect != 0)
+               if(collisionDetect != 0 && !enemiesPointer[i].GravityEffect(0,timeDiference))
                {
                     enemiesPointer[i].MoveInX(inc*enemiesPointer[i].GetInc(),timeDiference);
-                    enemiesPointer[i].OnMove(true);
                }
-               else
-               {
-                   enemiesPointer[i].SetInc(-1);; 
-               }
+               // else if(i != ind)
+               // {
+               //     enemiesPointer[i].SetInc(-1);; 
+               // }
           }
           
           glutPostRedisplay();
@@ -1290,7 +1429,7 @@ void changeCamera(int angle, int w, int h)
     
 //     gluLookAt(1,2,5, 0,0,0, 0,1,0);
     gluPerspective (angle, 
-            (GLfloat)w / (GLfloat)h, 1.8, 150.0);
+            (GLfloat)w / (GLfloat)h, 1.0, 150.0);
 
     glMatrixMode (GL_MODELVIEW);
 }

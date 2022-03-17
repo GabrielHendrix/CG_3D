@@ -47,9 +47,9 @@ int Enemy::loadMeshAnim(string path, int qtd){
 void Enemy::draw(int movID, int frameId){
     // glPushMatrix();
     // glTranslatef(0, gY, gZ);
-    glScalef(radius*2, radius*2, radius*2);
-    glRotatef(90, 0, 1, 0);
-    glRotatef(hDirection, 0, 1, 0);
+    // glScalef(radius*2, radius*2, radius*2);
+    // glRotatef(90, 0, 1, 0);
+    // glRotatef(hDirection, 0, 1, 0);
     if (this->texID != -1){
         glEnable(GL_TEXTURE_2D);
         glBindTexture (GL_TEXTURE_2D, this->texID);
@@ -85,6 +85,7 @@ bool Enemy::loadTexture(string path){
                                                //as unsigned numbers
                              image->pixels);               //The actual pixel data
     delete image;
+    return true;
 }
 
 //função para carregar o OBJ
@@ -201,8 +202,8 @@ bool Enemy::GravityEffect(GLfloat delta, GLdouble deltaTime)
     {
         hDirection = direction + 180;    
     }
-    dx = cos(degreeToRadEnemy(direction)) * delta;
-    dz = sin(degreeToRadEnemy(direction)) * delta;
+    // dx = cos(degreeToRadEnemy(direction)) * delta;
+    // dz = sin(degreeToRadEnemy(direction)) * delta;
 
 
     if(ground < gY-percentual*deltaTime)
@@ -213,7 +214,7 @@ bool Enemy::GravityEffect(GLfloat delta, GLdouble deltaTime)
         return true;
     }
     else
-    {
+    {   
         return false;
     }
 }
@@ -221,19 +222,54 @@ void Enemy::MoveInX(GLfloat delta, GLdouble deltaTime)
 {
     GLfloat dx, dz;
 
-    if(delta > 0)
+    // if(delta > 0)
+    // {
+    //     hDirection = direction;
+    // }
+    // if (delta < 0)
+    // {
+    //     hDirection = direction + 180;    
+    // }
+    // dx = cos(degreeToRadEnemy(direction)) * delta;
+    // dz = sin(degreeToRadEnemy(direction)) * delta;
+    // if(on_move){
+    // gX += dx*percentual*deltaTime/15;
+    // gZ += dz*percentual*deltaTime/15;
+    if(aiming)
     {
-        hDirection = direction;
+        // if(delta > 0)
+        // {
+        //     hDirection = direction;
+        // }
+        // if (delta < 0)
+        // {
+        //     hDirection = direction + 180;    
+        // }
+        
+        if(direction < 0)
+            hDirection = 180 - direction;
+        else
+            hDirection = direction;
+        // dx = cos(degreeToRadEnemy(direction)) * abs(delta);
+        // dz = sin(degreeToRadEnemy(direction)) * abs(delta);
+        
+        // gX += dx*percentual*deltaTime/15;
+        // gZ += dz*percentual*deltaTime/15;
     }
-    if (delta < 0)
+    else
     {
-        hDirection = direction + 180;    
+        if(delta > 0)
+        {
+            hDirection = 0;
+        }
+        if (delta < 0)
+        {
+            hDirection = 180;    
+        }
+        gX += delta*percentual*deltaTime/15;
+        gZ += delta*percentual*deltaTime/15;    
     }
-    dx = cos(degreeToRadEnemy(direction)) * delta;
-    dz = sin(degreeToRadEnemy(direction)) * delta;
-
-    gX += dx*percentual*deltaTime/15;
-    gZ += dz*percentual*deltaTime/15;    
+    // }
     
     if(ground < gY-(radius*2))
         gY = gY-(radius*2);
@@ -301,16 +337,19 @@ bool Enemy::DetectCollision(Platform *platforms, int len, GLfloat pos)
         {   
             y = - (platforms[i].GetY() - pos);
             
-            if (((gY - (radius/2) <= y) &&  (gY + (radius/2) >= (y - platforms[i].GetH()))))
+            if (gY + (radius*2)*2 + radiusWheel <= y &&  
+                gY + (radius*2)*2 + (radius*2) >= (y - platforms[i].GetH()))
             {
-                if((gX+radius*2 >= platforms[i].GetX()) && gX+radius*2 < (platforms[i].GetX() + platforms[i].GetW()) &&
-                    gX+radius*2 <= platforms[i].GetX() + (platforms[i].GetW()/4))
+                if(gX+(radius*2) >= platforms[i].GetX() && 
+                   gX+(radius*2) < (platforms[i].GetX() + platforms[i].GetW())) //&&
+                    // gX+radius*2 <= platforms[i].GetX() + (platforms[i].GetW()/4))
                 {
                     gX= platforms[i].GetX() - radius*2;
                     return true;
                 }
-                else if((gX-radius*2 > platforms[i].GetX()) && gX-radius*2 <= (platforms[i].GetX() + platforms[i].GetW()) &&
-                    gX-radius*2 > platforms[i].GetX() + (platforms[i].GetW()/2) + (platforms[i].GetW()/4))
+                 else if(gX-(radius*2) > platforms[i].GetX() && 
+                         gX-(radius*2) <= (platforms[i].GetX() + platforms[i].GetW())) //&&
+                    // gX-radius*2 > platforms[i].GetX() + (platforms[i].GetW()/2) + (platforms[i].GetW()/4))
                 {
                     gX= platforms[i].GetX() + (platforms[i].GetW() + radius*2);
                     return true;
@@ -364,12 +403,33 @@ void Enemy::DeleteFireball()
 
 void Enemy::Atira()
 {      
-    GLfloat xa, ya, x, y;
-    Fireball *fireball;
-    GLfloat th = 235;
+    // GLfloat x, y, z;
+    // Fireball *fireball;
+    // GLfloat th = armAngle;
+
+    // fireballOn = true;
+  
+    // x = this->vecMeshes[currentMovID][currentFrame].vertsPos[13704].x;
+    // y = this->vecMeshes[currentMovID][currentFrame].vertsPos[13704].y;
+    // z = this->vecMeshes[currentMovID][currentFrame].vertsPos[13704].z;
+    // fireball = new Fireball((GetRadius() * 2 * GetPosArmX()), 
+    //                         (GetRadius() * 2 * GetPosArmY()), 
+    //                         (GetRadius() * 2 * GetPosArmZ()), 
+    //                         (GetRadius() * 2 * x), 
+    //                         (GetRadius() * 2 * y), 
+    //                         (GetRadius() * 2 * z), 
+    //                         (GetRadius() * 2 * x), 
+    //                         (GetRadius() * 2 * y), 
+    //                         (GetRadius() * 2 * z), 
+    //                         GetHDirection(), armAngle, GetX(), GetY(), GetZ());
+    // t = fireball;
+
+    // GLfloat xa, ya, x, y;
+    // Fireball *fireball;
+    // GLfloat th = 235;
    
-    t = fireball;
-    fireballOn = true;
+    // t = fireball;
+    // fireballOn = true;
     
     // if (hDirection == -1)
     // {

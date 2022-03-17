@@ -80,6 +80,7 @@ bool Player::loadTexture(string path){
                                                //as unsigned numbers
                              image->pixels);               //The actual pixel data
     delete image;
+    return true;
 }
 
 //função para carregar o OBJ
@@ -353,15 +354,16 @@ GLint Player::DetectGround(Platform *platforms, Enemy *enemies, int lenPlatforms
 {
     for (int i = 0; i < lenEnemies; i++)
     {
-        GLfloat y = (enemies[i].GetY());
-        if(sqrt(pow(gX - enemies[i].GetX(), 2)) < (radius*2) &&
-           sqrt(pow((gY - (radius*2)) - (y+(radius*2)),2)) <= (radius*2) &&
+        GLfloat y = enemies[i].GetY();
+        if(sqrt(pow(gX - enemies[i].GetX(), 2)) < (radius*4) &&
+            (gY - (radius*4)) >= y+(radius*4) &&
+        //    sqrt(pow((gY - (radius*2)) - (y+(radius*2)),2)) <= (radius*2) &&
            !enemies[i].GetDefeatState())
         {
             if (ground <= enemies[i].GetY())
             {
-                ground = enemies[i].GetY();
-                return enemies[i].GetY();
+                ground = -(enemies[i].GetY() + radius*5);
+                return -(enemies[i].GetY() + radius*5);
             }
         }
     }
@@ -375,7 +377,7 @@ GLint Player::DetectGround(Platform *platforms, Enemy *enemies, int lenPlatforms
             {
                 ground = platforms[i].GetY();
 
-                return platforms[i].GetY();
+                return platforms[i].GetY()-pos;
             }
         }
     }
@@ -408,68 +410,71 @@ GLint Player::DetectDistance(Enemy *enemies, int lenEnemies)
 
 GLint Player::DetectCollision(Platform *platforms, Enemy *enemies, int lenPlatforms, int lenEnemies, GLfloat pos)
 {
-    for (int i = 0; i < lenEnemies; i++)
-    {   
-        GLfloat y = enemies[i].GetY();
+    // for (int i = 0; i < lenEnemies; i++)
+    // {   
+    //     GLfloat y = enemies[i].GetY();
         
-        if (((gY - radius/2 <= y) &&  
-            (gY + radius/2 >= (y - (radius*2)))) &&
-            !enemies[i].GetDefeatState())
-        {
-            if(sqrt(pow(gX + (radius*2) - enemies[i].GetX(), 2)) < (radius*2))
-            {
-                if(sqrt(pow(gZ + (radius*2) - enemies[i].GetZ(), 2)) < (radius*2))
-                {
-                    gX= enemies[i].GetX() - (radius*4);
-                    gZ= enemies[i].GetZ() - (radius*4);
-                    return 0;
-                }
-                if(sqrt(pow(gZ - (radius*2) - enemies[i].GetZ(), 2)) < (radius*2))
-                {
-                    gX= enemies[i].GetX() - (radius*4);
-                    gZ= enemies[i].GetZ() + (radius*4);
-                    return 0;
-                }
-            }
-            else if(sqrt(pow(gX - (radius*2) - enemies[i].GetX(), 2)) < (radius*2))
-            {
-                if(sqrt(pow(gZ + (radius*2) - enemies[i].GetZ(), 2)) < (radius*2))
-                {
-                    gX= enemies[i].GetX() + (radius*4);
-                    gZ= enemies[i].GetZ() - (radius*4);
-                    return 0;
-                }
-                if(sqrt(pow(gZ - (radius*2) - enemies[i].GetZ(), 2)) < (radius*2))
-                {
-                    gX= enemies[i].GetX() + (radius*4);
-                    gZ= enemies[i].GetZ() + (radius*4);
-                    return 0;
-                }
-            }
-        }
+    //     if (((gY - radius/2 <= y) &&  
+    //         (gY + radius/2 >= (y - (radius*2)))) &&
+    //         !enemies[i].GetDefeatState())
+    //     {
+    //         if(sqrt(pow(gX + (radius*2) - enemies[i].GetX(), 2)) < (radius*2))
+    //         {
+    //             if(sqrt(pow(gZ + (radius*2) - enemies[i].GetZ(), 2)) < (radius*2))
+    //             {
+    //                 gX= enemies[i].GetX() - (radius*4);
+    //                 gZ= enemies[i].GetZ() - (radius*4);
+    //                 return 0;
+    //             }
+    //             if(sqrt(pow(gZ - (radius*2) - enemies[i].GetZ(), 2)) < (radius*2))
+    //             {
+    //                 gX= enemies[i].GetX() - (radius*4);
+    //                 gZ= enemies[i].GetZ() + (radius*4);
+    //                 return 0;
+    //             }
+    //         }
+    //         else if(sqrt(pow(gX - (radius*2) - enemies[i].GetX(), 2)) < (radius*2))
+    //         {
+    //             if(sqrt(pow(gZ + (radius*2) - enemies[i].GetZ(), 2)) < (radius*2))
+    //             {
+    //                 gX= enemies[i].GetX() + (radius*4);
+    //                 gZ= enemies[i].GetZ() - (radius*4);
+    //                 return 0;
+    //             }
+    //             if(sqrt(pow(gZ - (radius*2) - enemies[i].GetZ(), 2)) < (radius*2))
+    //             {
+    //                 gX= enemies[i].GetX() + (radius*4);
+    //                 gZ= enemies[i].GetZ() + (radius*4);
+    //                 return 0;
+    //             }
+    //         }
+    //     }
 
-    }
+    // }
     for (int i = 0; i < lenPlatforms; i++)
     {   
         GLfloat y = - (platforms[i].GetY() - pos);
                 
-        if ((( gY + (radius*2)*2 + radiusWheel <= y) &&  (gY + (radius*2)*2 + (radius*2) >= (y - platforms[i].GetH()))))
+        if ( gY + (radius*2)*2 + radiusWheel <= y &&  
+             gY + (radius*2)*2 + (radius*2) >= (y - platforms[i].GetH()))
         {   
-            if((gX-radius - radius >= platforms[i].GetX()) && gX+(radius*2) < (platforms[i].GetX() + platforms[i].GetW()) &&
-                gX+radius + radius <= platforms[i].GetX() + (platforms[i].GetW()))
+            if((gX-(radius*1.5) >= platforms[i].GetX()) && gX+(radius*2) < (platforms[i].GetX() + platforms[i].GetW()) &&
+                gX+(radius*1.5) <= platforms[i].GetX() + (platforms[i].GetW()))
             {
                 colliderState = true;
                 return 1;
             }
-            else if((gX+(radius*2) >= platforms[i].GetX()) && gX+(radius*2) < (platforms[i].GetX() + platforms[i].GetW()) &&
-                gX+(radius*2) <= platforms[i].GetX() + (platforms[i].GetW()/4))
+            else if(gX+(radius*1.5) >= platforms[i].GetX() && 
+                    gX+(radius*1.5) < (platforms[i].GetX() + platforms[i].GetW())) //&&
+                    // gX+(radius*2) <= platforms[i].GetX() + (platforms[i].GetW()/4))
             {
                 colliderState = true;
                 gX= platforms[i].GetX() - (radius*2);
                 return 1;
             }
-            else if((gX-(radius*2) > platforms[i].GetX()) && gX-(radius*2) <= (platforms[i].GetX() + platforms[i].GetW()) &&
-                gX-(radius*2) > platforms[i].GetX() + (platforms[i].GetW()/2) + (platforms[i].GetW()/4))
+            else if((gX-(radius*1.5) > platforms[i].GetX()) && 
+                    gX-(radius*1.5) <= (platforms[i].GetX() + platforms[i].GetW()))// &&
+                    // gX-(radius*2) > platforms[i].GetX() + (platforms[i].GetW()/2) + (platforms[i].GetW()/4))
             {
                 colliderState = true;
                 gX= platforms[i].GetX() + (platforms[i].GetW() +(radius*2));
@@ -496,21 +501,31 @@ void Player::DeleteFireball()
 void Player::Atira()
 {   
     
-    GLfloat xa, ya, za, x, y, z;
+    GLfloat x, y, z;
     Fireball *fireball;
     GLfloat th = armAngle;
 
     fireballOn = true;
   
+    if (type){
+        x = 0;
+        y = GetRadius() * 6.5 * 0.3;
+        z = 0;
+    }
+    else{
+        x = this->vecMeshes[currentMovID][currentFrame].vertsPos[13704].x;
+        y = this->vecMeshes[currentMovID][currentFrame].vertsPos[13704].y;
+        z = this->vecMeshes[currentMovID][currentFrame].vertsPos[13704].z;
+    }
     fireball = new Fireball((GetRadius() * 2 * GetPosArmX()), 
                             (GetRadius() * 2 * GetPosArmY()), 
                             (GetRadius() * 2 * GetPosArmZ()), 
-                            (GetRadius() * 2 * this->vecMeshes[currentMovID][currentFrame].vertsPos[13704].x), 
-                            (GetRadius() * 2 * this->vecMeshes[currentMovID][currentFrame].vertsPos[13704].y), 
-                            (GetRadius() * 2 * this->vecMeshes[currentMovID][currentFrame].vertsPos[13704].z), 
-                            (GetRadius() * 2 * this->vecMeshes[currentMovID][currentFrame].vertsPos[13704].x), 
-                            (GetRadius() * 2 * this->vecMeshes[currentMovID][currentFrame].vertsPos[13704].y), 
-                            (GetRadius() * 2 * this->vecMeshes[currentMovID][currentFrame].vertsPos[13704].z), 
+                            (GetRadius() * 2 * x), 
+                            (GetRadius() * 2 * y), 
+                            (GetRadius() * 2 * z), 
+                            (GetRadius() * 2 * x), 
+                            (GetRadius() * 2 * y), 
+                            (GetRadius() * 2 * z), 
                             GetHDirection(), armAngle, GetX(), GetY(), GetZ());
     t = fireball;
 }
