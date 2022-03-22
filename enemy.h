@@ -65,9 +65,9 @@ class Enemy {
         int currentFrame;
         Enemy(GLfloat x, GLfloat y, GLfloat z, GLfloat percent, GLfloat rad)
         {
-            gX = x; 
-            gY = y; 
-            gZ = z;
+            SetX(x);
+            SetY(y); 
+            SetZ(z);
             posArmX = 0;
             posArmY = 0;
             posArmZ = 0;

@@ -104,8 +104,8 @@
 #define radiusFireball 1
 class Fireball
 {
-    GLfloat gX[3], gY[3], gZ[3], gDirectionAng, gAngleYZ, gXInit, gYInit, gZInit, playerPosX, playerPosY, playerPosZ;
-
+    GLfloat gX[3], gY[3], gZ[3], gDirectionAng, gAngleYZ, gXInit, gYInit, gZInit, playerPosX, playerPosY, playerPosZ, posCorrection;
+    bool isEnemy;
 private:
     void DrawCircle(GLint radius, GLfloat R, GLfloat G, GLfloat B);
 
@@ -115,7 +115,7 @@ public:
              GLfloat x1, GLfloat y1, GLfloat z1, 
              GLfloat x2, GLfloat y2, GLfloat z2, 
              GLfloat directionAng, GLfloat angleYZ,
-             GLfloat playerX, GLfloat playerY, GLfloat playerZ)
+             GLfloat playerX, GLfloat playerY, GLfloat playerZ, bool enemy)
     {
         gX[0] = x0;
         gX[1] = x1;
@@ -129,6 +129,7 @@ public:
         gXInit = x1;
         gYInit = y1;
         gZInit = z1;
+        isEnemy = enemy;
         gDirectionAng = directionAng;
         gAngleYZ = angleYZ;
         playerPosX = playerX;   
@@ -136,30 +137,34 @@ public:
         playerPosZ = playerZ;
     };
     ~Fireball(){};
-    void Draw()
+    void Draw(GLfloat pos)
     {
+        posCorrection = pos; 
         DrawFireball(gX[0], gY[0], gZ[0],  
                      gX[1], gY[1], gZ[1],
                      gX[2], gY[2], gZ[2],
-                     gDirectionAng, gAngleYZ);
+                     gDirectionAng, gAngleYZ, isEnemy);
     };
     void Move(GLfloat deltaTime);
     void DrawFireball(GLfloat x0, GLfloat y0, GLfloat z0, 
                       GLfloat x1, GLfloat y1, GLfloat z1, 
                       GLfloat x2, GLfloat y2, GLfloat z2, 
-                      GLfloat directionAng, GLfloat angleYZ);
+                      GLfloat directionAng, GLfloat angleYZ, bool enemy);
     bool DetectBulletCollision(Platform *element, int len, GLfloat gXpos, GLfloat pos);
     bool DetectBackground(Platform *element, int len, GLfloat gXpos, GLfloat pos);
     void GetPos(GLfloat &xOut, GLfloat &yOut, GLfloat &zOut)
     {
         if (cos((gDirectionAng * M_PI)/180)/abs(cos((gDirectionAng * M_PI)/180)) >= 0){
             xOut = playerPosX + gX[2];
+            zOut = gZ[2] + playerPosZ;
         }
         else{
             xOut = playerPosX - gX[2];
+            zOut = playerPosZ - gZ[2];
         }
-        yOut = gY[2] + playerPosY;
-        zOut = gZ[2] + playerPosZ;
+        // xOut = playerPosX + gX[2];
+
+        yOut = gY[2] + playerPosY;        
     };
 
     // GLfloat GetX(){

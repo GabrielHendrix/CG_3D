@@ -36,7 +36,7 @@ int Enemy::loadMeshAnim(string path, int qtd){
     for(int i = 1; i<=qtd; i++){
         snprintf (str, 7, "%06d", i);
         path.replace(index, 6, str);
-        std::cout << path << std::endl; 
+        // std::cout << path << std::endl; 
         this->vecMeshes[movID].push_back(m);
         this->vecMeshes[movID][this->vecMeshes[movID].size()-1].loadMesh(path);
     }
@@ -45,11 +45,6 @@ int Enemy::loadMeshAnim(string path, int qtd){
 
 //Desenha uma mesh com a respectiva textura
 void Enemy::draw(int movID, int frameId){
-    // glPushMatrix();
-    // glTranslatef(0, gY, gZ);
-    // glScalef(radius*2, radius*2, radius*2);
-    // glRotatef(90, 0, 1, 0);
-    // glRotatef(hDirection, 0, 1, 0);
     if (this->texID != -1){
         glEnable(GL_TEXTURE_2D);
         glBindTexture (GL_TEXTURE_2D, this->texID);
@@ -68,13 +63,20 @@ bool Enemy::loadTexture(string path){
     Image* image = loadBMP(path.c_str());
     this->texWidth = image->width;
     this->texHeight = image->height;
-
+    
     glGenTextures( 1, &(this->texID) );
     glBindTexture( GL_TEXTURE_2D, this->texID );
-    glTexEnvf( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE,GL_MODULATE );
-//    glTexEnvf( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE,GL_REPLACE );
-    glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,GL_LINEAR );
-    glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER,GL_LINEAR );
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    // Enable shadow comparison
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_R_TO_TEXTURE);
+    // Shadow comparison should be true (ie not in shadow) if r<=texture
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_FUNC, GL_LEQUAL);
+    // Shadow comparison should generate an INTENSITY result
+    glTexParameterf(GL_TEXTURE_2D, GL_DEPTH_TEXTURE_MODE, GL_INTENSITY);
+
     glTexImage2D(GL_TEXTURE_2D,                //Always GL_TEXTURE_2D
                              0,                            //0 for now
                              GL_RGB,                       //Format OpenGL uses for image
@@ -165,7 +167,7 @@ bool meshEnemy::loadMesh(string path){
 //desenha a malha
 void meshEnemy::draw(){
     int cont=0;
-    GLfloat materialEmission[] = { 0.10, 0.10, 0.10, 1};
+    GLfloat materialEmission[] = { 0.05, 0.05, 0.05, 1};
     GLfloat materialColorA[] = { 0.1, 0.1, 0.1, 0.1};
     GLfloat materialColorD[] = { .90, .90, .90, 1};
     glColor3f(1,1,1);
@@ -222,30 +224,8 @@ void Enemy::MoveInX(GLfloat delta, GLdouble deltaTime)
 {
     GLfloat dx, dz;
 
-    // if(delta > 0)
-    // {
-    //     hDirection = direction;
-    // }
-    // if (delta < 0)
-    // {
-    //     hDirection = direction + 180;    
-    // }
-    // dx = cos(degreeToRadEnemy(direction)) * delta;
-    // dz = sin(degreeToRadEnemy(direction)) * delta;
-    // if(on_move){
-    // gX += dx*percentual*deltaTime/15;
-    // gZ += dz*percentual*deltaTime/15;
     if(aiming)
-    {
-        // if(delta > 0)
-        // {
-        //     hDirection = direction;
-        // }
-        // if (delta < 0)
-        // {
-        //     hDirection = direction + 180;    
-        // }
-        
+    {   
         if(direction < 0)
             hDirection = 180 - direction;
         else
@@ -267,10 +247,8 @@ void Enemy::MoveInX(GLfloat delta, GLdouble deltaTime)
             hDirection = 180;    
         }
         gX += delta*percentual*deltaTime/15;
-        gZ += delta*percentual*deltaTime/15;    
+        // // gZ += delta*percentual*deltaTime/15;    
     }
-    // }
-    
     if(ground < gY-(radius*2))
         gY = gY-(radius*2);
     else
@@ -310,15 +288,13 @@ GLint Enemy::DetectGround(Platform *platforms, int len, GLfloat pos)
 
     for (int i = 0; i < len; i++)
     {
-        // GLfloat y = - (platforms[i].GetY() - pos);
+        GLfloat y = - (platforms[i].GetY() - pos);
         // printf("sqrt(pow((gY - (radius*2)) - platforms[i].GetY(),2)): %f \n (radius*4): %f \n", sqrt(pow((gY - (radius*2)) - platforms[i].GetY(),2)), (radius*4));
-
         if(((gX+(2*radius) > platforms[i].GetX()) && (gX-(2*radius) < (platforms[i].GetX() + platforms[i].GetW()))) &&
            sqrt(pow((gY + (radius*2)) - platforms[i].GetY(),2)) <= (radius*4))
         {
             if (ground <= platforms[i].GetY())
             {
-                // printf("gY enemy[%d]: %f\n", i, y);
 
                 ground = platforms[i].GetY();
                 return i;
@@ -342,14 +318,12 @@ bool Enemy::DetectCollision(Platform *platforms, int len, GLfloat pos)
             {
                 if(gX+(radius*2) >= platforms[i].GetX() && 
                    gX+(radius*2) < (platforms[i].GetX() + platforms[i].GetW())) //&&
-                    // gX+radius*2 <= platforms[i].GetX() + (platforms[i].GetW()/4))
                 {
                     gX= platforms[i].GetX() - radius*2;
                     return true;
                 }
                  else if(gX-(radius*2) > platforms[i].GetX() && 
                          gX-(radius*2) <= (platforms[i].GetX() + platforms[i].GetW())) //&&
-                    // gX-radius*2 > platforms[i].GetX() + (platforms[i].GetW()/2) + (platforms[i].GetW()/4))
                 {
                     gX= platforms[i].GetX() + (platforms[i].GetW() + radius*2);
                     return true;
@@ -359,7 +333,6 @@ bool Enemy::DetectCollision(Platform *platforms, int len, GLfloat pos)
     }
     else 
     {
-        // printf("detectedEnemyGnd %d\n", detectedEnemyGnd);
         y = - (platforms[detectedEnemyGnd].GetY() - pos);
 
         if(gX-radius*2 <= (platforms[detectedEnemyGnd].GetX()))
@@ -403,67 +376,27 @@ void Enemy::DeleteFireball()
 
 void Enemy::Atira()
 {      
-    // GLfloat x, y, z;
-    // Fireball *fireball;
-    // GLfloat th = armAngle;
+    GLfloat x, y, z ,test;
+    Fireball *fireball;
+    GLfloat th = armAngle;
 
-    // fireballOn = true;
+    fireballOn = true;
   
-    // x = this->vecMeshes[currentMovID][currentFrame].vertsPos[13704].x;
-    // y = this->vecMeshes[currentMovID][currentFrame].vertsPos[13704].y;
-    // z = this->vecMeshes[currentMovID][currentFrame].vertsPos[13704].z;
-    // fireball = new Fireball((GetRadius() * 2 * GetPosArmX()), 
-    //                         (GetRadius() * 2 * GetPosArmY()), 
-    //                         (GetRadius() * 2 * GetPosArmZ()), 
-    //                         (GetRadius() * 2 * x), 
-    //                         (GetRadius() * 2 * y), 
-    //                         (GetRadius() * 2 * z), 
-    //                         (GetRadius() * 2 * x), 
-    //                         (GetRadius() * 2 * y), 
-    //                         (GetRadius() * 2 * z), 
-    //                         GetHDirection(), armAngle, GetX(), GetY(), GetZ());
-    // t = fireball;
+    x = this->vecMeshes[currentMovID][currentFrame].vertsPos[13704].x;
+    y = this->vecMeshes[currentMovID][currentFrame].vertsPos[13704].y;
+    z = this->vecMeshes[currentMovID][currentFrame].vertsPos[13704].z;
 
-    // GLfloat xa, ya, x, y;
-    // Fireball *fireball;
-    // GLfloat th = 235;
-   
-    // t = fireball;
-    // fireballOn = true;
-    
-    // if (hDirection == -1)
-    // {
-    //     if(!on_move)
-    //     {
-    //         x = radius*2;
-    //         y = GetY() + radius*2;
-    //     }
-    //     else if (on_move)
-    //     {
-    //         x = 0;
-    //         y = GetY() + radius*2;
-    //     }
-    //     // RotatePoint(x, y, armAngle + 270, xa, ya);
-    //     // *fireball = Fireball(xa, ya, armAngle + 270);
-    //     *fireball = Fireball(x, y, armAngle + 270);
-
-    // }
-    // else
-    // {
-    //     if(!on_move)
-    //     {
-    //         x = radius*2;
-    //         y = GetY() + radius*2;
-    //     }
-    //     else if (on_move)
-    //     {
-    //         x = radius*2;
-    //         y = GetY() + radius*2;
-    //     }
-    //     // RotatePoint(x, y, -armAngle - 270, xa, ya);
-    //     // *fireball = Fireball(xa, ya, -armAngle - 270);
-    //     *fireball = Fireball(x, y, -armAngle - 270);
-    // } 
+    fireball = new Fireball((GetRadius() * 2 * GetPosArmX()), 
+                            (GetRadius() * 2 * GetPosArmY()), 
+                            (GetRadius() * 2 * GetPosArmZ()), 
+                            (GetRadius() * 2 * x), 
+                            (GetRadius() * 2 * y), 
+                            (GetRadius() * 2 * z), 
+                            (GetRadius() * 2 * x), 
+                            (GetRadius() * 2 * y), 
+                            (GetRadius() * 2 * z), 
+                            GetHDirection(), armAngle, GetX(), GetY(), GetZ(), true);
+    t = fireball;
 }
 bool Enemy::Atingido(Fireball *fireball, GLfloat pos)
 {
@@ -471,32 +404,21 @@ bool Enemy::Atingido(Fireball *fireball, GLfloat pos)
     if (fireball)
     {
         fireball->GetPos(x,y,z);
-        // printf("BallX: %f\n", x);
-        // printf("BallY: %f\n", y);
-        // printf("BallZ: %f\n\n", z);
-        
-        // printf("gX: %f\n",   gX);
-        // printf("gY: %f\n",   gY);
-        // printf("gZ: %f\n\n", gZ);
-        // glPushMatrix(); 
-        //     glTranslatef((gX+(radius/3)) - pos, gY+radius/2,gZ);
-        //     glutSolidCube(radius);
-        // glPopMatrix();
-        if(abs(sqrt(pow((gX+(radius/3)) - x, 2))) < (radius*2)/3 &&
-           abs(sqrt(pow((gY+radius*4) - y, 2))) < radius &&
-           abs(sqrt(pow((gZ+(radius/3)) - z, 2))) < (radius*2)/3)
-        {
-            printf("BallX: %f\n", x);
-            printf("BallY: %f\n", y);
-            printf("BallZ: %f\n\n", z);
 
-            printf("gX: %f\n",   (gX+(radius/3)));
-            printf("gY: %f\n",   (gY+(radius/2)));
-            printf("gZ: %f\n\n", (gZ+(radius/3)));
-            printf("INIMIGO ATINGIDO!\n");
-            // defeat = true;
-            // return true;
-            return false;
+        if (abs(sqrt(pow(gX - x, 2))) < radius*2 &&
+           abs(sqrt(pow((gY+(radius*4)) - y, 2))) < radius*4  &&
+           abs(sqrt(pow(gZ - z, 2))) < radius*2)
+        {
+            // printf("BallX: %f\n", x);
+            // printf("BallY: %f\n", y);
+            // printf("BallZ: %f\n\n", z);
+
+            // printf("gX: %f\n",   gX);
+            // printf("gY: %f\n",   gY+(radius*4));
+            // printf("gZ: %f\n\n", gZ);    
+            // printf("INIMIGO ATINGIDO!\n");
+            defeat = true;
+            return true;
         }
         return false;
     }  

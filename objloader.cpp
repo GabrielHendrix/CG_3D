@@ -89,14 +89,14 @@ bool mesh::loadMesh(string path){
 //desenha a malha
 void mesh::draw(){
     int cont=0;
-    GLfloat materialEmission[] = { 0.10, 0.10, 0.10, 1};
+    GLfloat materialEmission[] = { 0.0, 0.0, 0.0, 1};
     GLfloat materialColorA[] = { 0.1, 0.1, 0.1, 0.1};
     GLfloat materialColorD[] = { .90, .90, .90, 1};
     glColor3f(1,1,1);
 
-    glMaterialfv(GL_FRONT, GL_EMISSION, materialEmission);
-    glMaterialfv(GL_FRONT, GL_AMBIENT, materialColorA);
-    glMaterialfv(GL_FRONT, GL_DIFFUSE, materialColorD);
+    // glMaterialfv(GL_FRONT, GL_EMISSION, materialEmission);
+    // glMaterialfv(GL_FRONT, GL_AMBIENT, materialColorA);
+    // glMaterialfv(GL_FRONT, GL_DIFFUSE, materialColorD);
     if (this->texID != -1){
         glEnable(GL_TEXTURE_2D);
         glBindTexture (GL_TEXTURE_2D, this->texID);
@@ -122,13 +122,27 @@ bool mesh::loadText(string path){
     Image* image = loadBMP(path.c_str());
     this->texWidth = image->width;
     this->texHeight = image->height;
-
+    // Create the shadow map texture
     glGenTextures( 1, &(this->texID) );
     glBindTexture( GL_TEXTURE_2D, this->texID );
-    glTexEnvf( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE,GL_MODULATE );
-//    glTexEnvf( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE,GL_REPLACE );
-    glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,GL_LINEAR );
-    glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER,GL_LINEAR );
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    // Enable shadow comparison
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_R_TO_TEXTURE);
+    // Shadow comparison should be true (ie not in shadow) if r<=texture
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_FUNC, GL_LEQUAL);
+    // Shadow comparison should generate an INTENSITY result
+    glTexParameterf(GL_TEXTURE_2D, GL_DEPTH_TEXTURE_MODE, GL_INTENSITY);
+    // glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, this->texWidth, this->texHeight, 0, GL_DEPTH_COMPONENT, GL_UNSIGNED_BYTE, image->pixels);
+    
+//     glGenTextures( 1, &(this->texID) );
+//     glBindTexture( GL_TEXTURE_2D, this->texID );
+//     glTexEnvf( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE,GL_MODULATE );
+// //    glTexEnvf( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE,GL_REPLACE );
+//     glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,GL_LINEAR );
+//     glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER,GL_LINEAR );
     glTexImage2D(GL_TEXTURE_2D,                //Always GL_TEXTURE_2D
                              0,                            //0 for now
                              GL_RGB,                       //Format OpenGL uses for image

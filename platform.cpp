@@ -10,25 +10,37 @@
 void Platform::DrawRect(GLint height, GLint width, GLint length, GLfloat R, GLfloat G, GLfloat B)
 {
 	/* Define cor dos vértices com os valores R, G e B variando de 0.0 a 1.0 */
-	GLfloat materialEmission[] = { 0.00, 0.00, 0.00, 1.0};
-	GLfloat materialColor[] = { 1.0, 1.0, 0.0, 1.0};
-	GLfloat mat_specular[] = { 1.0, 1.0, 1.0, 1.0};
-	GLfloat mat_shininess[] = { 128 };
-	glMaterialfv(GL_FRONT, GL_EMISSION, materialEmission);
-	glMaterialfv(GL_FRONT, GL_AMBIENT, materialColor);
-	glMaterialfv(GL_FRONT, GL_DIFFUSE, materialColor);
-	glMaterialfv(GL_FRONT, GL_SPECULAR, mat_specular);
-	glMaterialfv(GL_FRONT, GL_SHININESS, mat_shininess);
+	// GLfloat materialEmission[] = { 0.00, 0.00, 0.00, 1.0};
+	// GLfloat materialColor[] = { 1.0, 1.0, 0.0, 1.0};
+	// GLfloat mat_specular[] = { 1.0, 1.0, 1.0, 1.0};
+	// GLfloat mat_shininess[] = { 128 };
+	// glMaterialfv(GL_FRONT, GL_EMISSION, materialEmission);
+	// glMaterialfv(GL_FRONT, GL_AMBIENT, materialColor);
+	// glMaterialfv(GL_FRONT, GL_DIFFUSE, materialColor);
+	// glMaterialfv(GL_FRONT, GL_SPECULAR, mat_specular);
+	
+	// glMaterialfv(GL_FRONT, GL_SHININESS, mat_shininess);
 	/* Desenhar um polígono branco (retângulo) */
 	if(B == 255)
-	{         
-		glBegin(GL_QUADS);
- 			glNormal3f(0,1,0);
-			glVertex3f (gX+width, -gY-height, gZ); // Lado Direito Baixo
-			glVertex3f (gX, -gY-height, gZ);  // Lado Esquerdo Baixo 
-			glVertex3f (gX, -gY-height, gZ-length);  // Lado Esquerdo Cima
-			glVertex3f (gX+width, -gY-height, gZ-length); // Lado Direito Cima
-		glEnd();
+	{      
+		glPushMatrix();
+			GLfloat materialEmission[] = { 0.00, 0.00, 0.00, 1.0};
+			GLfloat materialColor[] = { 0.0, 1.0, 0.0, 1.0};
+			GLfloat mat_specular[] = { 0.0, 1.0, 0.0, 1.0};
+			GLfloat mat_shininess[] = { 128 };
+			// glMaterialfv(GL_FRONT, GL_EMISSION, materialEmission);
+			// glMaterialfv(GL_FRONT, GL_AMBIENT, materialColor);
+			// glMaterialfv(GL_FRONT, GL_DIFFUSE, materialColor);
+			// glMaterialfv(GL_FRONT, GL_SPECULAR, mat_specular);
+			// glMaterialfv(GL_FRONT, awGL_SHININESS, mat_shininess);
+			glBegin(GL_QUADS);
+				glNormal3f(0,1,0);
+				glVertex3f (gX+width, -gY-height, gZ); // Lado Direito Baixo
+				glVertex3f (gX, -gY-height, gZ);  // Lado Esquerdo Baixo 
+				glVertex3f (gX, -gY-height, gZ-length);  // Lado Esquerdo Cima
+				glVertex3f (gX+width, -gY-height, gZ-length); // Lado Direito Cima
+			glEnd();
+		glPopMatrix();
 	}	
 	else if (B == 0)
 	{
@@ -49,10 +61,19 @@ void Platform::DrawRect(GLint height, GLint width, GLint length, GLfloat R, GLfl
 
 		// glColor3f(1,0,0);
 		glPushMatrix();
-		glTranslatef(gX+(width/2),-gY-(height/2),gZ - length/2);
-		// glRotatef(180, 1, 0, 0);
-		glScalef(width, height, length);
-		glutSolidCube(1);
+			GLfloat materialEmission[] = { 0.00, 0.00, 0.00, 1.0};
+			GLfloat materialColor[] = { 0.0, 1.0, 0.0, 1.0};
+			GLfloat mat_specular[] = { 0.0, 1.0, 0.0, 1.0};
+			GLfloat mat_shininess[] = { 128 };
+			// glMaterialfv(GL_FRONT, GL_EMISSION, materialEmission);
+			// glMaterialfv(GL_FRONT, GL_AMBIENT, materialColor);
+			// glMaterialfv(GL_FRONT, GL_DIFFUSE, materialColor);
+			// glMaterialfv(GL_FRONT, GL_SPECULAR, mat_specular);
+			// glMaterialfv(GL_FRONT, GL_SHININESS, mat_shininess);
+			glTranslatef(gX+(width/2),-gY-(height/2),gZ - length/2);
+			// glRotatef(180, 1, 0, 0);
+			glScalef(width, height, length);
+			glutSolidCube(1);
 		glPopMatrix(); 
 		// GLfloat materialEmission[] = { 0.00, 0.00, 0.00, 1.0};
 		// GLfloat materialColor[] = { 1.0, 0.0, 1.0, 1.0};

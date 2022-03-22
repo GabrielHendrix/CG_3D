@@ -36,7 +36,7 @@ int Player::loadMeshAnim(string path, int qtd){
     for(int i = 1; i<=qtd; i++){
         snprintf (str, 7, "%06d", i);
         path.replace(index, 6, str);
-        std::cout << path << std::endl; 
+        // std::cout << path << std::endl; 
         this->vecMeshes[movID].push_back(m);
         this->vecMeshes[movID][this->vecMeshes[movID].size()-1].loadMesh(path);
     }
@@ -63,13 +63,25 @@ bool Player::loadTexture(string path){
     Image* image = loadBMP(path.c_str());
     this->texWidth = image->width;
     this->texHeight = image->height;
-
     glGenTextures( 1, &(this->texID) );
     glBindTexture( GL_TEXTURE_2D, this->texID );
-    glTexEnvf( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE,GL_MODULATE );
-//    glTexEnvf( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE,GL_REPLACE );
-    glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,GL_LINEAR );
-    glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER,GL_LINEAR );
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    // Enable shadow comparison
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_R_TO_TEXTURE);
+    // Shadow comparison should be true (ie not in shadow) if r<=texture
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_FUNC, GL_LEQUAL);
+    // Shadow comparison should generate an INTENSITY result
+    glTexParameterf(GL_TEXTURE_2D, GL_DEPTH_TEXTURE_MODE, GL_INTENSITY);
+    // glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, this->texWidth, this->texHeight, 0, GL_DEPTH_COMPONENT, GL_UNSIGNED_BYTE, image->pixels);
+//     glGenTextures( 1, &(this->texID) );
+//     glBindTexture( GL_TEXTURE_2D, this->texID );
+//     glTexEnvf( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE,GL_MODULATE );
+// //    glTexEnvf( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE,GL_REPLACE );
+//     glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,GL_LINEAR );
+//     glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER,GL_LINEAR );
     glTexImage2D(GL_TEXTURE_2D,                //Always GL_TEXTURE_2D
                              0,                            //0 for now
                              GL_RGB,                       //Format OpenGL uses for image
@@ -162,7 +174,7 @@ bool Player::loadMesh(string path){
 //desenha a malha
 void Player::draw(){
     int cont=0;
-    GLfloat materialEmission[] = { 0.10, 0.10, 0.10, 1};
+    GLfloat materialEmission[] = { 0.05, 0.05, 0.05, 1};
     GLfloat materialColorA[] = { 0.1, 0.1, 0.1, 0.1};
     GLfloat materialColorD[] = { .90, .90, .90, 1};
     glColor3f(1,1,1);
@@ -355,15 +367,16 @@ GLint Player::DetectGround(Platform *platforms, Enemy *enemies, int lenPlatforms
     for (int i = 0; i < lenEnemies; i++)
     {
         GLfloat y = enemies[i].GetY();
-        if(sqrt(pow(gX - enemies[i].GetX(), 2)) < (radius*4) &&
-            (gY - (radius*4)) >= y+(radius*4) &&
-        //    sqrt(pow((gY - (radius*2)) - (y+(radius*2)),2)) <= (radius*2) &&
+        if(sqrt(pow(gX - enemies[i].GetX(), 2)) < (radius*2) &&
+           sqrt(pow(gZ - enemies[i].GetZ(), 2)) < (radius*2) &&
+            // (gY - (radius*4)) >= y+(radius*4) &&
+           sqrt(pow((gY) - (y+(radius*2)),2)) <= (radius*2) &&
            !enemies[i].GetDefeatState())
         {
-            if (ground <= enemies[i].GetY())
+             if (ground <= enemies[i].GetY())
             {
-                ground = -(enemies[i].GetY() + radius*5);
-                return -(enemies[i].GetY() + radius*5);
+                ground = -(enemies[i].GetY() + radius*8);
+                return -(enemies[i].GetY() + radius*8);
             }
         }
     }
@@ -410,47 +423,47 @@ GLint Player::DetectDistance(Enemy *enemies, int lenEnemies)
 
 GLint Player::DetectCollision(Platform *platforms, Enemy *enemies, int lenPlatforms, int lenEnemies, GLfloat pos)
 {
-    // for (int i = 0; i < lenEnemies; i++)
-    // {   
-    //     GLfloat y = enemies[i].GetY();
+    for (int i = 0; i < lenEnemies; i++)
+    {   
+        GLfloat y = enemies[i].GetY();
         
-    //     if (((gY - radius/2 <= y) &&  
-    //         (gY + radius/2 >= (y - (radius*2)))) &&
-    //         !enemies[i].GetDefeatState())
-    //     {
-    //         if(sqrt(pow(gX + (radius*2) - enemies[i].GetX(), 2)) < (radius*2))
-    //         {
-    //             if(sqrt(pow(gZ + (radius*2) - enemies[i].GetZ(), 2)) < (radius*2))
-    //             {
-    //                 gX= enemies[i].GetX() - (radius*4);
-    //                 gZ= enemies[i].GetZ() - (radius*4);
-    //                 return 0;
-    //             }
-    //             if(sqrt(pow(gZ - (radius*2) - enemies[i].GetZ(), 2)) < (radius*2))
-    //             {
-    //                 gX= enemies[i].GetX() - (radius*4);
-    //                 gZ= enemies[i].GetZ() + (radius*4);
-    //                 return 0;
-    //             }
-    //         }
-    //         else if(sqrt(pow(gX - (radius*2) - enemies[i].GetX(), 2)) < (radius*2))
-    //         {
-    //             if(sqrt(pow(gZ + (radius*2) - enemies[i].GetZ(), 2)) < (radius*2))
-    //             {
-    //                 gX= enemies[i].GetX() + (radius*4);
-    //                 gZ= enemies[i].GetZ() - (radius*4);
-    //                 return 0;
-    //             }
-    //             if(sqrt(pow(gZ - (radius*2) - enemies[i].GetZ(), 2)) < (radius*2))
-    //             {
-    //                 gX= enemies[i].GetX() + (radius*4);
-    //                 gZ= enemies[i].GetZ() + (radius*4);
-    //                 return 0;
-    //             }
-    //         }
-    //     }
+        if (((gY - radius/2 <= y) &&  
+            (gY + radius/2 >= (y - (radius*2)))) &&
+            !enemies[i].GetDefeatState())
+        {
+            if(sqrt(pow(gX + (radius*2) - enemies[i].GetX(), 2)) < (radius*2))
+            {
+                if(sqrt(pow(gZ + (radius*2) - enemies[i].GetZ(), 2)) < (radius*2))
+                {
+                    gX= enemies[i].GetX() - (radius*4);
+                    gZ= enemies[i].GetZ() - (radius*4);
+                    return 0;
+                }
+                if(sqrt(pow(gZ - (radius*2) - enemies[i].GetZ(), 2)) < (radius*2))
+                {
+                    gX= enemies[i].GetX() - (radius*4);
+                    gZ= enemies[i].GetZ() + (radius*4);
+                    return 0;
+                }
+            }
+            else if(sqrt(pow(gX - (radius*2) - enemies[i].GetX(), 2)) < (radius*2))
+            {
+                if(sqrt(pow(gZ + (radius*2) - enemies[i].GetZ(), 2)) < (radius*2))
+                {
+                    gX= enemies[i].GetX() + (radius*4);
+                    gZ= enemies[i].GetZ() - (radius*4);
+                    return 0;
+                }
+                if(sqrt(pow(gZ - (radius*2) - enemies[i].GetZ(), 2)) < (radius*2))
+                {
+                    gX= enemies[i].GetX() + (radius*4);
+                    gZ= enemies[i].GetZ() + (radius*4);
+                    return 0;
+                }
+            }
+        }
 
-    // }
+    }
     for (int i = 0; i < lenPlatforms; i++)
     {   
         GLfloat y = - (platforms[i].GetY() - pos);
@@ -461,6 +474,7 @@ GLint Player::DetectCollision(Platform *platforms, Enemy *enemies, int lenPlatfo
             if((gX-(radius*1.5) >= platforms[i].GetX()) && gX+(radius*2) < (platforms[i].GetX() + platforms[i].GetW()) &&
                 gX+(radius*1.5) <= platforms[i].GetX() + (platforms[i].GetW()))
             {
+                // gY = (y - platforms[i].GetH());
                 colliderState = true;
                 return 1;
             }
@@ -507,9 +521,16 @@ void Player::Atira()
 
     fireballOn = true;
   
-    if (type){
+    if (type == 1){
         x = 0;
+        // y = GetRadius()*(18/8);
         y = GetRadius() * 6.5 * 0.3;
+        z = 0;
+    }
+    else if (type == 2)
+    {
+        x = 0;
+        y = GetRadius()*(18/8);
         z = 0;
     }
     else{
@@ -526,24 +547,32 @@ void Player::Atira()
                             (GetRadius() * 2 * x), 
                             (GetRadius() * 2 * y), 
                             (GetRadius() * 2 * z), 
-                            GetHDirection(), armAngle, GetX(), GetY(), GetZ());
+                            GetHDirection(), armAngle, GetX(), GetY(), GetZ(), false);
     t = fireball;
 }
 
 bool Player::Atingido(Fireball *fireball, GLfloat pos)
 {
     GLfloat x, y, z;
+    
     if (fireball)
     {
         fireball->GetPos(x,y,z);
+        if(abs(sqrt(pow(gX - x, 2))) < radius*2 &&
+           abs(sqrt(pow(gY+(radius*4) - y, 2))) < radius*4 &&
+           abs(sqrt(pow(gZ - z, 2))) < radius*2)
+        {
+            // printf("BallX: %f\n", x);
+            // printf("BallY: %f\n", y);
+            // printf("BallZ: %f\n\n", z);
 
-        if(abs(sqrt(pow(gX - (-x + pos), 2))) < (radius*2) &&
-           abs(sqrt(pow(gY - (y), 2))) < (radius*3))
-        {            
-            defeat = true;
+            // printf("gX: %f\n",   gX);
+            // printf("gY: %f\n",   gY+(radius*4));
+            // printf("gZ: %f\n\n", gZ);
+            // printf("PLAYER ATINGIDO!\n");
             return true;
         }
-        return false;
+        return false;   
     }  
     return false;     
 }
